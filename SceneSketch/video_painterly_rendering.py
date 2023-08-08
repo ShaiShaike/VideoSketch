@@ -76,9 +76,10 @@ def get_target(args):
 
 def main(args):
     inputs, mask = get_target(args)
-    loss_func = Loss(args, mask)
+    frame_index = 100 * int(filter(lambda x: x.isdigit(), args.target))
+    loss_func = Loss(args, mask)  # Todo: take mask out of Loss definition
     utils.log_input(args.use_wandb, 0, inputs, args.output_dir)
-    renderer = load_renderer(args, inputs, mask)
+    renderer = load_renderer(args, inputs, mask)  # Todo: new video renderer
     
     optimizer = PainterOptimizer(args, renderer)
     counter = 0
@@ -111,12 +112,15 @@ def main(args):
                 f"{args.output_dir}", f"init")
 
     for epoch in epoch_range:
+        # Todo: randomly choose image
         if not args.display:
             epoch_range.refresh()
         start = time.time()
         optimizer.zero_grad_()
-        sketches = renderer.get_image().to(args.device)
-        losses_dict_weighted, losses_dict_norm, losses_dict_original = loss_func(sketches, inputs.detach(), counter, renderer.get_widths(), renderer, optimizer, mode="train", width_opt=renderer.width_optim)
+        sketches = renderer.get_image().to(args.device)  # Todo: frame_index
+        losses_dict_weighted, losses_dict_norm, losses_dict_original = loss_func(
+            sketches, inputs.detach(), counter, renderer.get_widths(), renderer, optimizer,
+            mode="train", width_opt=renderer.width_optim)
         loss = sum(list(losses_dict_weighted.values()))
         loss.backward()
         optimizer.step_()
