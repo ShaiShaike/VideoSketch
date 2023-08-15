@@ -176,7 +176,10 @@ def parse_video_arguments():
     # =================================
     # ============ general ============
     # =================================
-    parser.add_argument("target", help="target image path")
+    parser.add_argument("video_path", help="target video path")
+    parser.add_argument("--start_frame", type=int, default=0)
+    parser.add_argument("--end_frame", type=int, default=-1)
+    # resize_to, crop
     parser.add_argument("--output_dir", type=str,
                         help="directory to save the output images and loss")
     parser.add_argument("--path_svg", type=str, default="none",
@@ -215,7 +218,9 @@ def parse_video_arguments():
     parser.add_argument("--save_interval", type=int, default=10)
     parser.add_argument("--eval_interval", type=int, default=20)
     parser.add_argument("--min_eval_iter", type=int, default=100)
+    parser.add_argument("--pre_resize", type=int, default=0)
     parser.add_argument("--image_scale", type=int, default=224)
+    parser.add_argument("--center_crop", type=int, default=0)
     parser.add_argument("--loss_mask", type=str, default="none", 
                         help="mask the object during training, can be none|back|for, if you want to mask out the background choose back")
     parser.add_argument("--dilated_mask", type=int, default=0)

@@ -223,7 +223,7 @@ def main(args):
     return configs_to_save
 
 if __name__ == "__main__":
-    args = config.parse_arguments()
+    args = config.parse_video_arguments()
     final_config = vars(args)
     try:
         configs_to_save = main(args)

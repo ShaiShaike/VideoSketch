@@ -43,23 +43,23 @@ class VideoPainter(Painter):
         assert target_path.exists()
         return Image.open(str(target_path))
     
-    def prep_video_inputs(self, args, video_path, start_frame, end_frame, resize_to, crop=None):
+    def prep_video_inputs(self, args, crop=None):
         # vid_path = r'C:\projects\VideoSketch\videos\production_id_4990428 (1080p).mp4'
         # out_dir = r'C:\projects\VideoSketch\preped_videos\ballerina'
 
-        cap = cv2.VideoCapture(video_path)
+        cap = cv2.VideoCapture(args.video_path)
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        assert start_frame >= 0 and start_frame < end_frame and end_frame < frame_count
+        assert args.start_frame >= 0 and args.start_frame < args.end_frame and args.end_frame < frame_count
         
         if not self.workdir.exists():
             makedirs(str(self.workdir))
 
-        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
         success, image = cap.read()
-        for frame_index in range(start_frame, end_frame):
+        for frame_index in range(args.start_frame, args.end_frame):
             
-            target, mask = self.process_image(image, args, resize_to, crop)
+            target, mask = self.process_image(image, args, crop)
             target.save(str(self.workdir / f"frame_{frame_index}.png"))
             np.save(str(self.workdir / f"mask_{frame_index}.npy"), mask)
             
@@ -75,13 +75,14 @@ class VideoPainter(Painter):
             
             success, image = cap.read()
     
-    def process_image(self, image, args, resize_to, crop):
+    def process_image(self, image, args, crop):
         if crop is not None:
             h_start, h_end, w_start, w_end = crop
             image = image[h_start:h_end, w_start:w_end]
-        im_size = image.shape[:2]
-        resize_scale = resize_to / max(im_size)
-        image = cv2.resize(image, [int(dim * resize_scale) for dim in im_size[::-1]])
+        if args.pre_resize > 0:
+            im_size = image.shape[:2]
+            resize_scale = args.pre_resize / max(im_size)
+            image = cv2.resize(image, [int(dim * resize_scale) for dim in im_size[::-1]])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         target = Image.fromarray(image)
 
@@ -103,7 +104,9 @@ class VideoPainter(Painter):
         transforms_ = []
         transforms_.append(transforms.Resize(
             args.image_scale, interpolation=Image.BICUBIC))
-        transforms_.append(transforms.CenterCrop(args.image_scale))
+        assert args.image_scale >= args.center_crop
+        center_crop = args.image_scale if args.center_crop == 0 else args.center_crop
+        transforms_.append(transforms.CenterCrop(center_crop))
         transforms_.append(transforms.ToTensor())
         data_transforms = transforms.Compose(transforms_)
 
