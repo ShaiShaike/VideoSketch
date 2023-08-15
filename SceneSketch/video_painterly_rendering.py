@@ -21,23 +21,23 @@ import wandb
 from PIL import Image
 from torchvision import models, transforms
 from tqdm.auto import tqdm, trange
+from numpy.random import randint as nprandint
 
 import config
 import sketch_utils as utils
 from models.loss import Loss
 from models.painter_params import Painter, PainterOptimizer
+from models.video_painter import VideoPainter
 from IPython.display import display, SVG
 import matplotlib.pyplot as plt
 # from torch import autograd
 
 
-def load_renderer(args, target_im=None, mask=None):
-    renderer = Painter(num_strokes=args.num_paths, args=args,
-                       num_segments=args.num_segments,
-                       imsize=args.image_scale,
-                       device=args.device,
-                       target_im=target_im,
-                       mask=mask)
+def load_renderer(args):
+    renderer = VideoPainter(args=args, num_strokes=args.num_paths,
+                            num_segments=args.num_segments,
+                            imsize=args.image_scale,
+                            device=args.device)
     renderer = renderer.to(args.device)
     return renderer
 
@@ -78,8 +78,8 @@ def main(args):
     inputs, mask = get_target(args)
     frame_index = 100 * int(filter(lambda x: x.isdigit(), args.target))
     loss_func = Loss(args, mask)  # Todo: take mask out of Loss definition
-    utils.log_input(args.use_wandb, 0, inputs, args.output_dir)
-    renderer = load_renderer(args, inputs, mask)  # Todo: new video renderer
+    # utils.log_input(args.use_wandb, 0, inputs, args.output_dir)
+    renderer = load_renderer(args)
     
     optimizer = PainterOptimizer(args, renderer)
     counter = 0
@@ -112,12 +112,14 @@ def main(args):
                 f"{args.output_dir}", f"init")
 
     for epoch in epoch_range:
-        # Todo: randomly choose image
+        batch_frame_indexes = nprandint(args.start_frame, args.end_frame) # Todo: args.batch_size
         if not args.display:
             epoch_range.refresh()
         start = time.time()
         optimizer.zero_grad_()
-        sketches = renderer.get_image().to(args.device)  # Todo: frame_index
+        renderer.load_clip_attentions_and_mask(batch_frame_indexes)
+        inputs = renderer.get_target(batch_frame_indexes)
+        sketches = renderer.get_image().to(args.device)
         losses_dict_weighted, losses_dict_norm, losses_dict_original = loss_func(
             sketches, inputs.detach(), counter, renderer.get_widths(), renderer, optimizer,
             mode="train", width_opt=renderer.width_optim)
@@ -126,8 +128,8 @@ def main(args):
         optimizer.step_()
 
         if epoch % args.save_interval == 0:
-            utils.plot_batch(inputs, sketches, f"{args.output_dir}/jpg_logs", counter,
-                             use_wandb=args.use_wandb, title=f"iter{epoch}.jpg")
+            # utils.plot_batch(inputs, sketches, f"{args.output_dir}/jpg_logs", counter,
+            #                  use_wandb=args.use_wandb, title=f"iter{epoch}.jpg")
             renderer.save_svg(
                 f"{args.output_dir}/svg_logs", f"svg_iter{epoch}")
 
@@ -144,6 +146,10 @@ def main(args):
                     }, f"{args.output_dir}/mlps/width_mlp{counter}.pt")
 
             with torch.no_grad():
+                #Todo: evaluate by last frame or by first, middle last
+                renderer.load_clip_attentions_and_mask(args.end_frame)
+                inputs = renderer.get_target(args.end_frame)
+                sketches = renderer.get_image().to(args.device)
                 losses_dict_weighted_eval, losses_dict_norm_eval, losses_dict_original_eval = loss_func(sketches, inputs, counter, renderer.get_widths(), renderer=renderer, mode="eval", width_opt=renderer.width_optim)
                 loss_eval = sum(list(losses_dict_weighted_eval.values()))
                 configs_to_save["loss_eval"].append(loss_eval.item())
@@ -177,7 +183,7 @@ def main(args):
                                 'model_state_dict': renderer.get_mlp().state_dict(),
                                 'optimizer_state_dict': optimizer.get_points_optim().state_dict(),
                                 }, f"{args.output_dir}/points_mlp.pt")
-                        
+                """     
                 if args.use_wandb:
                     wandb.run.summary["best_loss"] = best_loss
                     wandb.run.summary["best_loss_fc"] = best_fc_loss
@@ -191,6 +197,8 @@ def main(args):
                     for k in losses_dict_weighted_eval.keys():
                         wandb_dict[k + "_final_eval"] = losses_dict_weighted_eval[k].item()
                     wandb.log(wandb_dict, step=counter)
+                """
+        """
         if counter == 0 and args.attention_init:
             utils.plot_atten(renderer.get_attn(), renderer.get_thresh(), inputs, renderer.get_inds(),
                              args.use_wandb, "{}/{}.jpg".format(
@@ -211,7 +219,7 @@ def main(args):
                 wandb_dict[k + "_final"] = losses_dict_weighted[k].item()
             
             wandb.log(wandb_dict, step=counter)
-
+        """
         counter += 1
         if args.switch_loss:
             if epoch > 0 and epoch % args.switch_loss == 0:

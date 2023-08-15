@@ -177,9 +177,9 @@ def parse_video_arguments():
     # ============ general ============
     # =================================
     parser.add_argument("video_path", help="target video path")
+    parser.add_argument("workdir", help="directory path to save temps")
     parser.add_argument("--start_frame", type=int, default=0)
     parser.add_argument("--end_frame", type=int, default=-1)
-    # resize_to, crop
     parser.add_argument("--output_dir", type=str,
                         help="directory to save the output images and loss")
     parser.add_argument("--path_svg", type=str, default="none",

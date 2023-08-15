@@ -13,16 +13,18 @@ from painter_params import Painter
 
 
 class VideoPainter(Painter):
-    def __init__(self, workdir, args, num_strokes=4, num_segments=4, imsize=224, device=None):
+    def __init__(self, args, num_strokes=4, num_segments=4, imsize=224, device=None):
         super().__init__(args, num_strokes, num_segments, imsize, device, None, None)
 
-        self.workdir = Path(workdir)
+        self.workdir = Path(args.workdir)
         if "for" in args.loss_mask:
             # default for the mask is to mask out the background
             # if mask loss is for it means we want to maskout the foreground
             self.reverse_mask = True
         else:
             self.reverse_mask = False
+        
+        self.prep_video_inputs(args)
             
     
     def load_clip_attentions_and_mask(self, frame_index):
@@ -39,9 +41,9 @@ class VideoPainter(Painter):
             self.attention_map = None
 
     def get_target(self, frame_index):
-        target_path = self.workdir / f"frame_{frame_index}.png"
+        target_path = self.workdir / f"frame_{frame_index}.t"
         assert target_path.exists()
-        return Image.open(str(target_path))
+        return torch.load(str(target_path)).to(self.device)
     
     def prep_video_inputs(self, args, crop=None):
         # vid_path = r'C:\projects\VideoSketch\videos\production_id_4990428 (1080p).mp4'
@@ -60,7 +62,7 @@ class VideoPainter(Painter):
         for frame_index in range(args.start_frame, args.end_frame):
             
             target, mask = self.process_image(image, args, crop)
-            target.save(str(self.workdir / f"frame_{frame_index}.png"))
+            torch.save(target, str(self.workdir / f"frame_{frame_index}.t"))
             np.save(str(self.workdir / f"mask_{frame_index}.npy"), mask)
             
             clip_attentions = self.clip_it(self, target)
