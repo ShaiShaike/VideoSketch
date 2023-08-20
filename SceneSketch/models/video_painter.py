@@ -12,7 +12,7 @@ import sketch_utils as utils
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from painter_params import Painter
+from models.painter_params import Painter
 
 
 class VideoPainter(Painter):
