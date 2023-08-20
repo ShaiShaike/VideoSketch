@@ -22,7 +22,7 @@ from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--video_path", help="target video path")
-parser.add_argument("workdir", help="directory path to save temps")
+parser.add_argument("--workdir", help="directory path to save temps")
 parser.add_argument("--start_frame", type=int, default=0)
 parser.add_argument("--end_frame", type=int, default=-1)
 parser.add_argument("--pre_resize", type=int, default=0)
