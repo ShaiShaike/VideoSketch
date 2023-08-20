@@ -17,11 +17,16 @@ import numpy as np
 import torch
 from IPython.display import Image as Image_colab
 from IPython.display import display
+from pathlib import Path
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--target_file", type=str,
-                    help="target image file, located in <target_images>")
+parser.add_argument("--video_path", help="target video path")
+parser.add_argument("workdir", help="directory path to save temps")
+parser.add_argument("--start_frame", type=int, default=0)
+parser.add_argument("--end_frame", type=int, default=-1)
+parser.add_argument("--pre_resize", type=int, default=0)
+parser.add_argument("--center_crop", type=int, default=0)
 parser.add_argument("--output_pref", type=str, default="for_arik",
                     help="target image file, located in <target_images>")
 parser.add_argument("--num_strokes", type=int, default=64,
@@ -87,7 +92,7 @@ args = parser.parse_args()
 multiprocess = not args.colab and args.num_sketches > 1 and args.multiprocess
 abs_path = os.path.abspath(os.getcwd())
 
-target = args.target_file
+target = args.video_path
 assert os.path.isfile(target), f"{target} does not exists!"
 
 if not os.path.isfile(f"{abs_path}/U2Net_/saved_models/u2net.pth"):
@@ -100,11 +105,15 @@ output_dir = f"{args.output_pref}/{args.test_name}/"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
+workdir = Path(args.workdir)
+if not workdir.exists():
+    os.makedirs(str(workdir))
+
 print("=" * 50)
-print(f"Processing [{args.target_file}] ...")
-if args.colab:
-    img_ = Image_colab(target)
-    display(img_)
+print(f"Processing [{args.video_path}] ...")
+# if args.colab:
+#     img_ = Image_colab(target)
+#     display(img_)
 print(f"Results will be saved to \n[{output_dir}] ...")
 print("=" * 50)
 
@@ -119,8 +128,14 @@ print(f"GPU: {use_gpu}")
 seeds = list(range(0, args.num_sketches * 1000, 1000))
 
 
-def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum):
-    exit_code = sp.run(["python", "painterly_rendering.py", target,
+def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, tempdir):
+    if not Path(tempdir).exists():
+        os.makedirs(str(tempdir))
+    exit_code = sp.run(["python", "video_painterly_rendering.py", target, tempdir,
+                            "--start_frame", str(args.start_frame),
+                            "--end_frame", str(args.end_frame),
+                            "--pre_resize", str(args.pre_resize),
+                            "--center_crop", str(args.center_crop),
                             "--num_paths", str(args.num_strokes),
                             "--output_dir", output_dir,
                             "--wandb_name", wandb_name,
@@ -163,6 +178,8 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum):
                             "--resize_obj", str(args.resize_obj),
                             "--eval_interval", str(args.eval_interval),
                             "--min_eval_iter", str(args.min_eval_iter)])
+    shutil.rmtree(tempdir)
+    
     if exit_code.returncode:
         sys.exit(1)
 
@@ -193,11 +210,13 @@ if __name__ == "__main__":
     for j in range(args.num_sketches):
         seed = seeds[j]
         wandb_name = f"{args.test_name}_seed{seed}"
+        tempdir = str(workdir / f"temp_dir_{j}")
+
         if multiprocess:
             # run simulation and ISF analysis in each process
-            P.apply_async(run, (seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum))
+            P.apply_async(run, (seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, tempdir))
         else:
-            run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum)
+            run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, tempdir)
 
     if multiprocess:
         P.close()
