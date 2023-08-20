@@ -60,15 +60,16 @@ class Painter(torch.nn.Module):
         
         self.text_target = args.text_target # for clip gradients
         self.saliency_clip_model = args.saliency_clip_model
-        self.define_attention_input(target_im)
-        self.mask = mask
-        if "for" in args.loss_mask:
-            # default for the mask is to mask out the background
-            # if mask loss is for it means we want to maskout the foreground
-            self.mask = 1 - mask
-        self.attention_map = self.set_attention_map() if self.attention_init else None
-        
-        self.thresh = self.set_attention_threshold_map() if self.attention_init else None
+        if target_im is not None and mask is not None:
+            self.define_attention_input(target_im)
+            self.mask = mask
+            if "for" in args.loss_mask:
+                # default for the mask is to mask out the background
+                # if mask loss is for it means we want to maskout the foreground
+                self.mask = 1 - mask
+            self.attention_map = self.set_attention_map() if self.attention_init else None
+            
+            self.thresh = self.set_attention_threshold_map() if self.attention_init else None
         self.strokes_counter = 0 # counts the number of calls to "get_path"        
         self.epoch = 0
         self.final_epoch = args.num_iter - 1

@@ -81,8 +81,10 @@ class VideoPainter(Painter):
         if crop is not None:
             h_start, h_end, w_start, w_end = crop
             image = image[h_start:h_end, w_start:w_end]
+        im_size = image.shape[:2]
+        if max(im_size) > 512 and args.pre_resize == 0:
+            args.pre_resize = 512
         if args.pre_resize > 0:
-            im_size = image.shape[:2]
             resize_scale = args.pre_resize / max(im_size)
             image = cv2.resize(image, [int(dim * resize_scale) for dim in im_size[::-1]])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
