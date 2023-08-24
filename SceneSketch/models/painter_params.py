@@ -53,7 +53,6 @@ class Painter(torch.nn.Module):
 
         # attention related for strokes initialisation
         self.attention_init = args.attention_init
-        self.target_path = args.target
         self.saliency_model = args.saliency_model
         self.xdog_intersec = args.xdog_intersec
         self.mask_object_attention = args.mask_object_attention
@@ -61,6 +60,7 @@ class Painter(torch.nn.Module):
         self.text_target = args.text_target # for clip gradients
         self.saliency_clip_model = args.saliency_clip_model
         if target_im is not None and mask is not None:
+            self.target_path = args.target
             self.define_attention_input(target_im)
             self.mask = mask
             if "for" in args.loss_mask:

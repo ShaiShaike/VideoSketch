@@ -68,9 +68,9 @@ class Loss(nn.Module):
 
         self.loss_mapper = {}
         if self.clip_conv_loss:
-            self.loss_mapper["clip_conv_loss"] = CLIPConvLoss(args, mask)
+            self.loss_mapper["clip_conv_loss"] = CLIPConvLoss(args)
         if self.clip_mask_loss:
-            self.loss_mapper["clip_mask_loss"] = CLIPmaskLoss(args, mask)
+            self.loss_mapper["clip_mask_loss"] = CLIPmaskLoss(args)
         if self.width_optim:
             self.loss_mapper["width_loss"] = WidthLoss(args)
         if self.ratio_loss:
@@ -123,7 +123,7 @@ class Loss(nn.Module):
         for loss_name in self.losses_to_apply:
             if loss_name in ["clip_conv_loss", "clip_mask_loss"]:
                 conv_loss = self.loss_mapper[loss_name](
-                    sketches, targets, mode)
+                    sketches, targets, mode, renderer.mask)
                 for layer in conv_loss.keys():
                     if "normalization" in layer:
                         loss_coeffs[layer] = 0 # include layer 11 in gradnorm but not in final loss
@@ -528,19 +528,14 @@ def cos_layers(xs_conv_features, ys_conv_features, clip_model_name):
 
 
 class CLIPConvLoss(torch.nn.Module):
-    def __init__(self, args, mask):
+    def __init__(self, args):
         # mask is a binary tensor with shape (1,3,224,224)
         super(CLIPConvLoss, self).__init__()
         self.device = args.device
 
-        self.mask = mask
         self.loss_mask = args.loss_mask
         assert self.loss_mask in ["none", "back", "for"]
         self.apply_mask = (self.loss_mask != "none")
-        if self.loss_mask == "for":
-            # default for the mask is to mask out the background
-            # if mask loss is for it means we want to maskout the foreground
-            self.mask = 1 - mask
         
         self.clip_model_name = args.clip_model_name
         assert self.clip_model_name in [
@@ -621,7 +616,7 @@ class CLIPConvLoss(torch.nn.Module):
         self.clip_fc_loss_weight = args.clip_fc_loss_weight
         self.counter = 0
 
-    def forward(self, sketch, target, mode="train"):
+    def forward(self, sketch, target, mode="train", mask=None):
         """
         Parameters
         ----------
@@ -631,7 +626,7 @@ class CLIPConvLoss(torch.nn.Module):
         #         y = self.target_transform(target).to(self.args.device)
         conv_loss_dict = {}
         if self.apply_mask:
-            sketch *= self.mask
+            sketch *= mask
             
         x = sketch.to(self.device)
         y = target.to(self.device)
@@ -696,11 +691,10 @@ class CLIPConvLoss(torch.nn.Module):
 
 
 class CLIPmaskLoss(torch.nn.Module):
-    def __init__(self, args, mask):
+    def __init__(self, args):
         super(CLIPmaskLoss, self).__init__()
         self.args = args
         self.device = args.device
-        self.mask = mask
         self.loss_mask = args.loss_mask
         assert self.loss_mask in ["none", "back", "for", "back_latent", "for_latent"]
         self.apply_mask = (self.loss_mask != "none")
@@ -709,11 +703,6 @@ class CLIPmaskLoss(torch.nn.Module):
             kernel_tensor = torch.ones((1,1,11,11)).to(self.device)
             mask_ = torch.clamp(torch.nn.functional.conv2d(mask[:,0,:,:].unsqueeze(1), kernel_tensor, padding=(5, 5)), 0, 1)
             mask = torch.cat([mask_, mask_, mask_], axis=1)
-    
-        if "for" in self.loss_mask:
-            # default for the mask is to mask out the background
-            # if mask loss is for it means we want to maskout the foreground
-            self.mask = 1 - mask
         
         self.clip_model_name = args.clip_model_name
         self.clip_for_model_name = "RN101"
@@ -772,7 +761,7 @@ class CLIPmaskLoss(torch.nn.Module):
         self.clip_fc_loss_weight = 0
         self.counter = 0
 
-    def forward(self, sketch, target, mode="train"):
+    def forward(self, sketch, target, mode="train", mask=None):
         """
         Parameters
         ----------
@@ -783,10 +772,10 @@ class CLIPmaskLoss(torch.nn.Module):
         
         x = sketch.to(self.device)
         y = target.to(self.device)
-        sketch_augs, img_augs, masks = [x], [y], [self.mask]
+        sketch_augs, img_augs, masks = [x], [y], [mask]
         if mode == "train":
             for n in range(self.num_augs):
-                augmented_pair = self.augment_trans(torch.cat([x, y, self.mask]))
+                augmented_pair = self.augment_trans(torch.cat([x, y, mask]))
                 sketch_augs.append(augmented_pair[0].unsqueeze(0))
                 img_augs.append(augmented_pair[1].unsqueeze(0))
                 masks.append(augmented_pair[2].unsqueeze(0))

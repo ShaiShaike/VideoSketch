@@ -75,9 +75,7 @@ def get_target(args):
 
 
 def main(args):
-    inputs, mask = get_target(args)
-    frame_index = 100 * int(filter(lambda x: x.isdigit(), args.target))
-    loss_func = Loss(args, mask)  # Todo: take mask out of Loss definition
+    loss_func = Loss(args)
     # utils.log_input(args.use_wandb, 0, inputs, args.output_dir)
     renderer = load_renderer(args)
     
