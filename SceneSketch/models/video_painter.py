@@ -28,6 +28,13 @@ class VideoPainter(Painter):
             self.reverse_mask = False
         
         self.prep_video_inputs(args)
+
+        base_frame = (args.start_frame + args.end_frame) // 2
+        self.target_path = args.target
+        self.load_clip_attentions_and_mask(base_frame)
+        self.attention_map = self.set_attention_map() if self.attention_init else None
+        self.thresh = self.set_attention_threshold_map() if self.attention_init else None
+
             
     
     def load_clip_attentions_and_mask(self, frame_index):
@@ -62,9 +69,11 @@ class VideoPainter(Painter):
 
         cap.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
         success, image = cap.read()
+        is_first = True
         for frame_index in range(args.start_frame, args.end_frame):
             
-            target, mask = self.process_image(image, args, crop)
+            target, mask = self.process_image(image, args, crop, is_first)
+            is_first = False
             torch.save(target, str(self.workdir / f"frame_{frame_index}.t"))
             torch.save(mask, str(self.workdir / f"mask_{frame_index}.t"))
             
@@ -80,7 +89,17 @@ class VideoPainter(Painter):
             
             success, image = cap.read()
     
-    def process_image(self, image, args, crop):
+    def dino_attn_helper(self, image):
+        patch_size=8 # dino hyperparameter
+        totens = transforms.Compose([
+            transforms.Resize((self.canvas_height, self.canvas_width)),
+            transforms.ToTensor()
+            ])
+        totens(image).to(self.device)
+        self.w_featmap = img.shape[-2] // patch_size
+        self.h_featmap = img.shape[-1] // patch_size
+
+    def process_image(self, image, args, crop, is_first=False):
         if crop is not None:
             h_start, h_end, w_start, w_end = crop
             image = image[h_start:h_end, w_start:w_end]
@@ -100,6 +119,8 @@ class VideoPainter(Painter):
             new_image.paste(target, (0, 0), target)
             target = new_image
         target = target.convert("RGB")
+        if is_first:
+            self.dino_attn_helper(target)
         
         masked_im, mask = utils.get_mask_u2net(args, target)
         

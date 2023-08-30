@@ -458,11 +458,15 @@ class Painter(torch.nn.Module):
 
         dino_model = torch.hub.load('facebookresearch/dino:main', 'dino_vits8').eval().to(self.device)
         
-        self.main_im = Image.open(self.target_path).convert("RGB")
-        main_im_tensor = totens(self.main_im).to(self.device)
-        img = (main_im_tensor.unsqueeze(0) - mean_imagenet) / std_imagenet
-        w_featmap = img.shape[-2] // patch_size
-        h_featmap = img.shape[-1] // patch_size
+        if self.target_path is not None:
+            self.main_im = Image.open(self.target_path).convert("RGB")
+            main_im_tensor = totens(self.main_im).to(self.device)
+            img = (main_im_tensor.unsqueeze(0) - mean_imagenet) / std_imagenet
+            w_featmap = img.shape[-2] // patch_size
+            h_featmap = img.shape[-1] // patch_size
+        else:
+            w_featmap = self.w_featmap
+            h_featmap = self.h_featmap
         
         with torch.no_grad():
             attn = dino_model.get_last_selfattention(img).detach().cpu()[0]
