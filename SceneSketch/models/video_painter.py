@@ -45,7 +45,7 @@ class VideoPainter(Painter):
         mask = torch.load(str(mask_path)).to(self.device)
         self.mask = 1- mask if self.reverse_mask else mask
         if self.attention_init:
-            torch.load(str(self.workdir / f"attention_map_{frame_index}.t")).to(self.device)
+            np.load(str(self.workdir / f"attention_map_{frame_index}.npy"))
         else:
             self.attention_map = None
 
@@ -82,7 +82,7 @@ class VideoPainter(Painter):
             if self.attention_init:
                 self.image_input_attn_clip = clip_attentions
                 attention_map = self.set_attention_map()
-                torch.save(attention_map, str(self.workdir / f"attention_map_{frame_index}.t"))
+                np.save(str(self.workdir / f"attention_map_{frame_index}.npy", attention_map))
             else:
                 self.attention_map = None
             
