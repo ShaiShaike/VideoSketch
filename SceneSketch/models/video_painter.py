@@ -82,7 +82,7 @@ class VideoPainter(Painter):
             if self.attention_init:
                 self.image_input_attn_clip = clip_attentions
                 attention_map = self.set_attention_map()
-                np.save(str(self.workdir / f"attention_map_{frame_index}.npy", attention_map))
+                np.save(str(self.workdir / f"attention_map_{frame_index}.npy"), attention_map)
             else:
                 self.attention_map = None
             
