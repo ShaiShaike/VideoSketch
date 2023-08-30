@@ -39,7 +39,7 @@ class VideoPainter(Painter):
     def load_clip_attentions_and_mask(self, frame_index):
         attentions_path = self.workdir / f"clip_attentions_{frame_index}.t"
         mask_path = self.workdir / f"mask_{frame_index}.t"
-        assert attentions_path.exists() and mask_path.exists()
+        assert attentions_path.exists() and mask_path.exists(), str(attentions_path)
         self.image_input_attn_clip = torch.load(str(attentions_path)).to(self.device)
 
         mask = torch.load(str(mask_path)).to(self.device)
@@ -77,6 +77,7 @@ class VideoPainter(Painter):
             torch.save(mask, str(self.workdir / f"mask_{frame_index}.t"))
             
             clip_attentions = self.clip_it(target)
+            print('saving...', str(self.workdir / f"clip_attentions_{frame_index}.t"))
             torch.save(clip_attentions, str(self.workdir / f"clip_attentions_{frame_index}.t"))
 
             if self.attention_init:
