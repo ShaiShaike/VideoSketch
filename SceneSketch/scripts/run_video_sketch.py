@@ -222,9 +222,9 @@ if __name__ == "__main__":
         P.close()
         P.join()  # start processes
 
-    for j in range(args.num_sketches):
-        tempdir = str(workdir / f"temp_dir_{j}")
-        shutil.rmtree(tempdir)
+    # for j in range(args.num_sketches):
+    #     tempdir = str(workdir / f"temp_dir_{j}")
+    #     shutil.rmtree(tempdir)
 
 
     # save the mlps for the best normalised loss
