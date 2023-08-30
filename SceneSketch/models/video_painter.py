@@ -36,7 +36,7 @@ class VideoPainter(Painter):
         assert attentions_path.exists() and mask_path.exists()
         self.image_input_attn_clip = torch.load(str(attentions_path)).to(self.device)
 
-        torch = np.load(str(mask_path)).to(self.device)
+        mask = torch.load(str(mask_path)).to(self.device)
         self.mask = 1- mask if self.reverse_mask else mask
         if self.attention_init:
             torch.load(str(self.workdir / f"attention_map_{frame_index}.t")).to(self.device)
@@ -66,7 +66,7 @@ class VideoPainter(Painter):
             
             target, mask = self.process_image(image, args, crop)
             torch.save(target, str(self.workdir / f"frame_{frame_index}.t"))
-            torch.save(str(self.workdir / f"mask_{frame_index}.t"), mask)
+            torch.save(mask, str(self.workdir / f"mask_{frame_index}.t"))
             
             clip_attentions = self.clip_it(self, target)
             torch.save(clip_attentions, str(self.workdir / f"clip_attentions_{frame_index}.t"))
