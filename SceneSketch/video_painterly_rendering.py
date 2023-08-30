@@ -22,6 +22,7 @@ from PIL import Image
 from torchvision import models, transforms
 from tqdm.auto import tqdm, trange
 from numpy.random import randint as nprandint
+from pathlib import Path
 
 import config
 import sketch_utils as utils
@@ -230,6 +231,7 @@ def main(args):
 
 if __name__ == "__main__":
     args = config.parse_video_arguments()
+    assert Path(args.workdir).exists()
     final_config = vars(args)
     try:
         configs_to_save = main(args)

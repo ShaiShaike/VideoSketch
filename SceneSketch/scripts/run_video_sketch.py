@@ -18,6 +18,7 @@ import torch
 from IPython.display import Image as Image_colab
 from IPython.display import display
 from pathlib import Path
+from os import makedirs
 
 
 parser = argparse.ArgumentParser()
@@ -178,7 +179,6 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--resize_obj", str(args.resize_obj),
                             "--eval_interval", str(args.eval_interval),
                             "--min_eval_iter", str(args.min_eval_iter)])
-    shutil.rmtree(tempdir)
     
     if exit_code.returncode:
         sys.exit(1)
@@ -222,7 +222,9 @@ if __name__ == "__main__":
         P.close()
         P.join()  # start processes
 
-
+    for j in range(args.num_sketches):
+        tempdir = str(workdir / f"temp_dir_{j}")
+        shutil.rmtree(tempdir)
 
 
     # save the mlps for the best normalised loss
