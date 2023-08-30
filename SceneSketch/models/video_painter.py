@@ -95,7 +95,7 @@ class VideoPainter(Painter):
             transforms.Resize((self.canvas_height, self.canvas_width)),
             transforms.ToTensor()
             ])
-        totens(image).to(self.device)
+        img = totens(image).to(self.device)
         self.w_featmap = img.shape[-2] // patch_size
         self.h_featmap = img.shape[-1] // patch_size
 
