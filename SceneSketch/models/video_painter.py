@@ -69,7 +69,8 @@ class VideoPainter(Painter):
         cap.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
         success, image = cap.read()
         is_first = True
-        for frame_index in range(args.start_frame, args.end_frame):
+        end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
+        for frame_index in range(args.start_frame, end_frame):
             
             target, mask = self.process_image(image, args, crop, is_first)
             is_first = False
