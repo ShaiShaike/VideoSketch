@@ -68,7 +68,7 @@ class VideoPainter(Painter):
             torch.save(target, str(self.workdir / f"frame_{frame_index}.t"))
             torch.save(mask, str(self.workdir / f"mask_{frame_index}.t"))
             
-            clip_attentions = self.clip_it(self, target)
+            clip_attentions = self.clip_it(target)
             torch.save(clip_attentions, str(self.workdir / f"clip_attentions_{frame_index}.t"))
 
             if self.attention_init:
