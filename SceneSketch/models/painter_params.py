@@ -21,7 +21,8 @@ class Painter(torch.nn.Module):
                 imsize=224,
                 device=None,
                 target_im=None,
-                mask=None):
+                mask=None,
+                is_video=False):
         super(Painter, self).__init__()
 
         self.args = args
@@ -85,6 +86,12 @@ class Painter(torch.nn.Module):
             # self.mlp_width.apply(init_weights)
         self.gumbel_temp = args.gumbel_temp
         self.mlp = MLP(num_strokes=self.num_paths, num_cp=self.control_points_per_seg, width_optim=self.width_optim).to(device) if self.mlp_train else None
+        
+        self.is_video = is_video
+        if self.is_video:
+            self.frame_num = 0
+            self.motion_mlp = VideoMLP().to(device) if self.mlp_train else None
+        
         self.mlp_points_weights_path = args.mlp_points_weights_path
         self.mlp_points_weight_init()
         self.out_of_canvas_mask = torch.ones((self.num_paths)).to(self.device)
@@ -198,6 +205,14 @@ class Painter(torch.nn.Module):
             
         else:
             points = torch.stack(self.points_init).unsqueeze(0).to(self.device)
+        
+        if self.is_video:
+            points = points.reshape((-1, 2))
+            num_points = points.shape[0]
+            timeframe = torch.ones((num_points, 1)) * self.frame_num
+            points_and_time = torch.cat([points, timeframe], dim=1)
+            points = self.motion_mlp(points_and_time)
+            points = points.reshape((-1, self.num_paths * self.control_points_per_seg * 2))
 
         if self.width_optim and mode != "init": #first iter use just the location mlp
             widths_  = self.mlp_width(self.init_widths).clamp(min=1e-8)
@@ -883,6 +898,26 @@ class MLP(nn.Module):
         # if self.width_optim:
         #     return x.flatten() + 0.1 * deltas, self.layers_width(widths)
         return x.flatten() + 0.1 * deltas
+
+
+class VideoMLP(nn.Module):
+    def __init__(self):
+        super().__init__()
+        inner_dim = 1000
+        self.layers_points = nn.Sequential(
+            nn.Linear(3, inner_dim),
+            nn.SELU(inplace=True),
+            nn.Linear(inner_dim, inner_dim),
+            nn.SELU(inplace=True),
+            nn.Linear(inner_dim, 2)
+        )
+
+    def forward(self, x):
+        '''Forward pass'''
+        # x should be of dimenthin (num_points, 3) - 3 for coordinates + timeframe
+        deltas = self.layers_points(x)
+        return x + 0.1 * deltas
+
 
 class WidthMLP(nn.Module):
     def __init__(self, num_strokes, num_cp, width_optim=False):

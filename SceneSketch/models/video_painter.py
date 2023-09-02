@@ -37,6 +37,7 @@ class VideoPainter(Painter):
             
     
     def load_clip_attentions_and_mask(self, frame_index):
+        self.frame_num = frame_index
         attentions_path = self.workdir / f"clip_attentions_{frame_index}.t"
         mask_path = self.workdir / f"mask_{frame_index}.t"
         assert attentions_path.exists() and mask_path.exists(), str(attentions_path)
