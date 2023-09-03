@@ -35,7 +35,10 @@ class VideoPainter(Painter):
         self.thresh = self.set_attention_threshold_map() if self.attention_init else None
 
             
+    def get_motion_mlp(self):
+        return self.motion_mlp
     
+
     def load_clip_attentions_and_mask(self, frame_index):
         self.frame_num = frame_index
         attentions_path = self.workdir / f"clip_attentions_{frame_index}.t"

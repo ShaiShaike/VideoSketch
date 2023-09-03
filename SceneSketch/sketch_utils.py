@@ -509,3 +509,67 @@ def inference_sketch(args, eps=1e-4):
                 stroke_color=torch.tensor([0,0,0,1]))
             shape_groups.append(path_group)
     pydiffvg.save_svg(f"{output_path}/best_iter.svg", canvas_width, canvas_height, shapes, shape_groups)
+
+
+def inference_video(args, eps=1e-4):
+    output_dir = args.output_dir
+    mlp_points_weights_path = f"{output_dir}/points_mlp.pt"
+    mlp_width_weights_path = f"{output_dir}/width_mlp.pt"
+    sketch_init_path = f"{output_dir}/svg_logs/init_svg.svg"
+    output_path = f"{output_dir}/"
+    device = args.device
+
+    num_paths = args.num_paths
+    control_points_per_seg = args.control_points_per_seg
+    width_ = 1.5
+    num_control_points = torch.zeros(1, dtype = torch.int32) + (control_points_per_seg - 2)
+    init_widths = torch.ones((num_paths)).to(device) * width_
+    
+    mlp = MLP(num_strokes=num_paths, num_cp=control_points_per_seg).to(device)
+    checkpoint = torch.load(mlp_points_weights_path)
+    mlp.load_state_dict(checkpoint['model_state_dict'])
+
+    if args.width_optim:
+        mlp_width = WidthMLP(num_strokes=num_paths, num_cp=control_points_per_seg).to(device)
+        checkpoint = torch.load(mlp_width_weights_path)
+        mlp_width.load_state_dict(checkpoint['model_state_dict'])
+    
+    points_vars, canvas_width, canvas_height = get_init_points(sketch_init_path)
+    points_vars = torch.stack(points_vars).unsqueeze(0).to(device)
+    points_vars = points_vars / canvas_width
+    points_vars = 2 * points_vars - 1
+    points = mlp(points_vars)
+    
+    all_points = 0.5 * (points + 1.0) * canvas_width
+    all_points = all_points + eps * torch.randn_like(all_points)
+    all_points = all_points.reshape((-1, num_paths, control_points_per_seg, 2))
+
+    if args.width_optim: #first iter use just the location mlp
+        widths_  = mlp_width(init_widths).clamp(min=1e-8)
+        mask_flipped = (1 - widths_).clamp(min=1e-8)
+        v = torch.stack((torch.log(widths_), torch.log(mask_flipped)), dim=-1)
+        hard_mask = torch.nn.functional.gumbel_softmax(v, 0.2, False)
+        stroke_probs = hard_mask[:, 0]
+        widths = stroke_probs * init_widths   
+        
+    shapes = []
+    shape_groups = []
+    for p in range(num_paths):
+        width = torch.tensor(width_)
+        if args.width_optim:
+            width = widths[p]
+        w = width / 1.5 
+        path = pydiffvg.Path(
+            num_control_points=num_control_points, points=all_points[:,p].reshape((-1,2)),
+            stroke_width=width, is_closed=False)
+        # if mode == "init":
+        #     # do once at the begining, define a mask for strokes that are outside the canvas
+        is_in_canvas_ = is_in_canvas(canvas_width, canvas_height, path, device)
+        if is_in_canvas_ and w > 0.7:
+            shapes.append(path)
+            path_group = pydiffvg.ShapeGroup(
+                shape_ids=torch.tensor([len(shapes) - 1]),
+                fill_color=None,
+                stroke_color=torch.tensor([0,0,0,1]))
+            shape_groups.append(path_group)
+    pydiffvg.save_svg(f"{output_path}/best_iter.svg", canvas_width, canvas_height, shapes, shape_groups)

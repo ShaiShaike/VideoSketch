@@ -139,6 +139,10 @@ def main(args):
                         'model_state_dict': renderer.get_mlp().state_dict(),
                         'optimizer_state_dict': optimizer.get_points_optim().state_dict(),
                         }, f"{args.output_dir}/mlps/points_mlp{counter}.pt")
+                    torch.save({
+                        'model_state_dict': renderer.get_motion_mlp().state_dict(),
+                        'optimizer_state_dict': optimizer.get_points_optim().state_dict(),
+                        }, f"{args.output_dir}/mlps/motion_mlp{counter}.pt")
                 torch.save({
                     'model_state_dict': renderer.get_width_mlp().state_dict(),
                     'optimizer_state_dict': optimizer.get_width_optim().state_dict(),
@@ -182,6 +186,10 @@ def main(args):
                                 'model_state_dict': renderer.get_mlp().state_dict(),
                                 'optimizer_state_dict': optimizer.get_points_optim().state_dict(),
                                 }, f"{args.output_dir}/points_mlp.pt")
+                            torch.save({
+                                'model_state_dict': renderer.get_motion_mlp().state_dict(),
+                                'optimizer_state_dict': optimizer.get_points_optim().state_dict(),
+                                }, f"{args.output_dir}/motion_mlp.pt")
                 """     
                 if args.use_wandb:
                     wandb.run.summary["best_loss"] = best_loss
@@ -226,7 +234,7 @@ def main(args):
                     optimizer.switch_opt()
     if args.width_optim:
         utils.log_best_normalised_sketch(configs_to_save, args.output_dir, args.use_wandb, args.device, args.eval_interval, args.min_eval_iter)
-    utils.inference_sketch(args)
+    utils.inference_video(args)
     return configs_to_save
 
 if __name__ == "__main__":

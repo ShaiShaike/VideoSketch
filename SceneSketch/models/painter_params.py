@@ -90,7 +90,7 @@ class Painter(torch.nn.Module):
         self.is_video = is_video
         if self.is_video:
             self.frame_num = 0
-            self.motion_mlp = VideoMLP().to(device) if self.mlp_train else None
+            self.motion_mlp = MotionMLP().to(device) if self.mlp_train else None
         
         self.mlp_points_weights_path = args.mlp_points_weights_path
         self.mlp_points_weight_init()
@@ -900,7 +900,7 @@ class MLP(nn.Module):
         return x.flatten() + 0.1 * deltas
 
 
-class VideoMLP(nn.Module):
+class MotionMLP(nn.Module):
     def __init__(self):
         super().__init__()
         inner_dim = 1000
