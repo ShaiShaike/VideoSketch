@@ -21,7 +21,7 @@ from skimage.transform import resize
 import PIL
 from skimage import morphology
 from skimage.measure import label 
-from models.painter_params import MLP, WidthMLP
+from models.painter_params import MLP, WidthMLP, MotionMLP
 from shutil import copyfile
 
 
@@ -514,6 +514,7 @@ def inference_sketch(args, eps=1e-4):
 def inference_video(args, eps=1e-4):
     output_dir = args.output_dir
     mlp_points_weights_path = f"{output_dir}/points_mlp.pt"
+    mlp_motion_weights_path = f"{output_dir}/motion_mlp.pt"
     mlp_width_weights_path = f"{output_dir}/width_mlp.pt"
     sketch_init_path = f"{output_dir}/svg_logs/init_svg.svg"
     output_path = f"{output_dir}/"
@@ -529,6 +530,10 @@ def inference_video(args, eps=1e-4):
     checkpoint = torch.load(mlp_points_weights_path)
     mlp.load_state_dict(checkpoint['model_state_dict'])
 
+    motion_mlp = MotionMLP().to(device)
+    checkpoint = torch.load(mlp_motion_weights_path)
+    motion_mlp.load_state_dict(checkpoint['model_state_dict'])
+
     if args.width_optim:
         mlp_width = WidthMLP(num_strokes=num_paths, num_cp=control_points_per_seg).to(device)
         checkpoint = torch.load(mlp_width_weights_path)
@@ -539,10 +544,6 @@ def inference_video(args, eps=1e-4):
     points_vars = points_vars / canvas_width
     points_vars = 2 * points_vars - 1
     points = mlp(points_vars)
-    
-    all_points = 0.5 * (points + 1.0) * canvas_width
-    all_points = all_points + eps * torch.randn_like(all_points)
-    all_points = all_points.reshape((-1, num_paths, control_points_per_seg, 2))
 
     if args.width_optim: #first iter use just the location mlp
         widths_  = mlp_width(init_widths).clamp(min=1e-8)
@@ -552,24 +553,37 @@ def inference_video(args, eps=1e-4):
         stroke_probs = hard_mask[:, 0]
         widths = stroke_probs * init_widths   
         
-    shapes = []
-    shape_groups = []
-    for p in range(num_paths):
-        width = torch.tensor(width_)
-        if args.width_optim:
-            width = widths[p]
-        w = width / 1.5 
-        path = pydiffvg.Path(
-            num_control_points=num_control_points, points=all_points[:,p].reshape((-1,2)),
-            stroke_width=width, is_closed=False)
-        # if mode == "init":
-        #     # do once at the begining, define a mask for strokes that are outside the canvas
-        is_in_canvas_ = is_in_canvas(canvas_width, canvas_height, path, device)
-        if is_in_canvas_ and w > 0.7:
-            shapes.append(path)
-            path_group = pydiffvg.ShapeGroup(
-                shape_ids=torch.tensor([len(shapes) - 1]),
-                fill_color=None,
-                stroke_color=torch.tensor([0,0,0,1]))
-            shape_groups.append(path_group)
-    pydiffvg.save_svg(f"{output_path}/best_iter.svg", canvas_width, canvas_height, shapes, shape_groups)
+    orig_shape = points.shape
+    points = points.reshape((-1, 2))
+    num_points = points.shape[0]
+    for frame_num in range(args.start_frame, args.end_frame):
+        timeframe = torch.ones((num_points, 1)) * frame_num
+        points_and_time = torch.cat([points, timeframe], dim=1)
+        frame_points = motion_mlp(points_and_time)
+        frame_points = frame_points.reshape(orig_shape)
+
+        all_points = 0.5 * (frame_points + 1.0) * canvas_width
+        all_points = all_points + eps * torch.randn_like(all_points)
+        all_points = all_points.reshape((-1, num_paths, control_points_per_seg, 2))
+
+        shapes = []
+        shape_groups = []
+        for p in range(num_paths):
+            width = torch.tensor(width_)
+            if args.width_optim:
+                width = widths[p]
+            w = width / 1.5 
+            path = pydiffvg.Path(
+                num_control_points=num_control_points, points=all_points[:,p].reshape((-1,2)),
+                stroke_width=width, is_closed=False)
+            # if mode == "init":
+            #     # do once at the begining, define a mask for strokes that are outside the canvas
+            is_in_canvas_ = is_in_canvas(canvas_width, canvas_height, path, device)
+            if is_in_canvas_ and w > 0.7:
+                shapes.append(path)
+                path_group = pydiffvg.ShapeGroup(
+                    shape_ids=torch.tensor([len(shapes) - 1]),
+                    fill_color=None,
+                    stroke_color=torch.tensor([0,0,0,1]))
+                shape_groups.append(path_group)
+        pydiffvg.save_svg(f"{output_path}/best_iter_frame_{frame_num}.svg", canvas_width, canvas_height, shapes, shape_groups)
