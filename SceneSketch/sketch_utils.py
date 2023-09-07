@@ -609,7 +609,7 @@ def inference_video(args, eps=1e-4):
                       *scene_args)
         opacity = img[:, :, 3:4]
         img = opacity * img[:, :, :3] + torch.ones(img.shape[0], img.shape[1], 3, device=device) * (1 - opacity)
-        img = img[:, :, :3].cpu().detach().numpy()
+        img = img[:, :, :3].cpu().detach().numpy().astype('uint8')
         outcrop.write(img[:, :, ::-1])
         print(f'wrote frame {frame_num}')
     outcrop.release()
