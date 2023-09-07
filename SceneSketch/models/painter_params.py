@@ -209,7 +209,7 @@ class Painter(torch.nn.Module):
         if self.is_video:
             points = points.reshape((-1, 2))
             num_points = points.shape[0]
-            timeframe = torch.ones((num_points, 1)) * self.frame_num
+            timeframe = torch.ones((num_points, 1), device=self.device) * self.frame_num
             points_and_time = torch.cat([points, timeframe], dim=1)
             points = self.motion_mlp(points_and_time)
             points = points.reshape((-1, self.num_paths * self.control_points_per_seg * 2))
