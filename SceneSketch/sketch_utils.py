@@ -559,13 +559,11 @@ def inference_video(args, eps=1e-4):
     points = points.reshape((-1, 2))
     num_points = points.shape[0]
     cap = cv2.VideoCapture(args.video_path)
-    a = cv2.VideoWriter('./results_sketches/ballerina/runs/object_l4_ballerina//object_l4_ballerina_seed1000/best_iter_video1.mp4', -1,
-                        cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
-    a.release()
 
     outcrop = cv2.VideoWriter(str(Path(output_path) / 'best_iter_video.mp4'), -1,
                               cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
     print('saving:', str(Path(output_path) / 'best_iter_video.mp4'))
+    print(-1, cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
     cap.release()
 
     end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
@@ -614,6 +612,7 @@ def inference_video(args, eps=1e-4):
         opacity = img[:, :, 3:4]
         img = opacity * img[:, :, :3] + torch.ones(img.shape[0], img.shape[1], 3, device=device) * (1 - opacity)
         img = img[:, :, :3].cpu().detach().numpy().astype('uint8')
+        cv2.imwrite(f"{output_path}/best_iter_frame_{frame_num}.png", img)
         print('img.shape', img.shape)
         outcrop.write(img[:, :, ::-1])
         print(f'wrote frame {frame_num}')
