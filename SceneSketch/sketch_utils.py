@@ -564,7 +564,7 @@ def inference_video(args, eps=1e-4):
     cap.release()
 
     for frame_num in range(args.start_frame, args.end_frame):
-        timeframe = torch.ones((num_points, 1)) * frame_num
+        timeframe = torch.ones((num_points, 1), device=device) * frame_num
         points_and_time = torch.cat([points, timeframe], dim=1)
         frame_points = motion_mlp(points_and_time)
         frame_points = frame_points.reshape(orig_shape)
