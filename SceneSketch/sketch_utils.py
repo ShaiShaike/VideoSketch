@@ -556,6 +556,13 @@ def inference_video(args, eps=1e-4):
     orig_shape = points.shape
     points = points.reshape((-1, 2))
     num_points = points.shape[0]
+    import cv2
+    cap = cv2.VideoCapture(args.video_path)
+
+    outcrop = cv2.VideoWriter(f"{output_path}/best_iter_video.mp4", -1,
+                              cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
+    cap.release()
+
     for frame_num in range(args.start_frame, args.end_frame):
         timeframe = torch.ones((num_points, 1)) * frame_num
         points_and_time = torch.cat([points, timeframe], dim=1)
@@ -587,3 +594,22 @@ def inference_video(args, eps=1e-4):
                     stroke_color=torch.tensor([0,0,0,1]))
                 shape_groups.append(path_group)
         pydiffvg.save_svg(f"{output_path}/best_iter_frame_{frame_num}.svg", canvas_width, canvas_height, shapes, shape_groups)
+
+        _render = pydiffvg.RenderFunction.apply
+        scene_args = pydiffvg.RenderFunction.serialize_scene(
+            canvas_width, canvas_height, shapes, shape_groups)
+        img = _render(canvas_width, # width
+                      canvas_height, # height
+                      2,   # num_samples_x
+                      2,   # num_samples_y
+                      0,   # seed
+                      None,
+                      *scene_args)
+        opacity = img[:, :, 3:4]
+        img = opacity * img[:, :, :3] + torch.ones(img.shape[0], img.shape[1], 3, device=device) * (1 - opacity)
+        img = img[:, :, :3].numpy()
+        outcrop.write(img[:, :, ::-1])
+    outcrop.release()
+
+
+
