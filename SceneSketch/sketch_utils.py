@@ -561,7 +561,7 @@ def inference_video(args, eps=1e-4):
     cap = cv2.VideoCapture(args.video_path)
 
     outcrop = cv2.VideoWriter(str(Path(output_path) / 'best_iter_video.mp4'), -1,
-                              cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
+                              cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width), False)
     print('saving:', str(Path(output_path) / 'best_iter_video.mp4'))
     print(-1, cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
     cap.release()
