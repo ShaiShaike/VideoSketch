@@ -17,7 +17,7 @@ from models.painter_params import Painter
 
 class VideoPainter(Painter):
     def __init__(self, args, num_strokes=4, num_segments=4, imsize=224, device=None):
-        super().__init__(args, num_strokes, num_segments, imsize, device, None, None)
+        super().__init__(args, num_strokes, num_segments, imsize, device, None, None, is_video=True)
 
         self.workdir = Path(args.workdir)
         if "for" in args.loss_mask:
