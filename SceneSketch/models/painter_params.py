@@ -897,7 +897,7 @@ class MLP(nn.Module):
         deltas = self.layers_points(x)
         # if self.width_optim:
         #     return x.flatten() + 0.1 * deltas, self.layers_width(widths)
-        return x[:, :2, :, :].flatten() + 0.1 * deltas
+        return x.flatten() + 0.1 * deltas
 
 
 class MotionMLP(nn.Module):
@@ -916,7 +916,8 @@ class MotionMLP(nn.Module):
         '''Forward pass'''
         # x should be of dimenthin (num_points, 3) - 3 for coordinates + timeframe
         deltas = self.layers_points(x)
-        return x + 0.1 * deltas
+
+        return x[:, :2] + 0.1 * deltas
 
 
 class WidthMLP(nn.Module):
