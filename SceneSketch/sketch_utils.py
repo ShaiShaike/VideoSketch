@@ -563,7 +563,7 @@ def inference_video(args, eps=1e-4):
                               cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
     print('saving:', f"{output_path}/best_iter_video.mp4")
     cap.release()
-    
+
     end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
     for frame_num in range(args.start_frame, end_frame):
         timeframe = torch.ones((num_points, 1), device=device) * frame_num
@@ -611,6 +611,7 @@ def inference_video(args, eps=1e-4):
         img = opacity * img[:, :, :3] + torch.ones(img.shape[0], img.shape[1], 3, device=device) * (1 - opacity)
         img = img[:, :, :3].cpu().detach().numpy()
         outcrop.write(img[:, :, ::-1])
+        print(f'wrote frame {frame_num}')
     outcrop.release()
 
 
