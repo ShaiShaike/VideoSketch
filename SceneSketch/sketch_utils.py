@@ -612,9 +612,9 @@ def inference_video(args, eps=1e-4):
         opacity = img[:, :, 3:4]
         img = opacity * img[:, :, :3] + torch.ones(img.shape[0], img.shape[1], 3, device=device) * (1 - opacity)
         img = img[:, :, :3].cpu().detach().numpy().astype('uint8')
-        cv2.imwrite(f"{output_path}/best_iter_frame_{frame_num}.png", img)
-        print('img.shape', img.shape)
-        outcrop.write(img[:, :, ::-1])
+        cv2.imwrite(f"{output_path}/best_iter_frame_{frame_num}.png", img * 255)
+        print('img.shape', img.shape, 'max:', np.max(img), 'min:', np.max(min))
+        outcrop.write(img[:, :, ::-1] * 255)
         print(f'wrote frame {frame_num}')
     outcrop.release()
 
