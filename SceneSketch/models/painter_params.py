@@ -897,7 +897,7 @@ class MLP(nn.Module):
         deltas = self.layers_points(x)
         # if self.width_optim:
         #     return x.flatten() + 0.1 * deltas, self.layers_width(widths)
-        return x.flatten() + 0.1 * deltas
+        return x[:, :2, :, :].flatten() + 0.1 * deltas
 
 
 class MotionMLP(nn.Module):
