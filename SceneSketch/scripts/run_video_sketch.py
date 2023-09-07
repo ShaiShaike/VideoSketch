@@ -235,11 +235,12 @@ if __name__ == "__main__":
         #                     allow_pickle=True)[()]
         copyfile(f"{output_dir}/{winning_trial}/svg_logs/init_svg.svg",
                 f"{output_dir}/init.svg")
-        for frame_num in range(args.start_frame, args.end_frame):
+        end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
+        for frame_num in range(args.start_frame, end_frame):
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.svg",
-                    f"{output_dir}/{winning_trial}_best_frame_{frame_num}.svg")
+                    f"{output_dir}/{winning_trial}/best_frame_{frame_num}.svg")
         copyfile(f"{output_dir}/{winning_trial}/best_iter_video.mp4",
-                    f"{output_dir}/{winning_trial}_best_video.mp4")
+                    f"{output_dir}/{winning_trial}/best_video.mp4")
         copyfile(f"{output_dir}/{winning_trial}/points_mlp.pt",
                 f"{output_dir}/points_mlp.pt")
         copyfile(f"{output_dir}/{winning_trial}/width_mlp.pt",
@@ -255,11 +256,12 @@ if __name__ == "__main__":
         print(f"{output_dir}/{winning_trial}")
         copyfile(f"{output_dir}/{winning_trial}/svg_logs/init_svg.svg",
                 f"{output_dir}/init.svg")
-        for frame_num in range(args.start_frame, args.end_frame):
+        end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
+        for frame_num in range(args.start_frame, end_frame):
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.svg",
-                    f"{output_dir}/{winning_trial}_best_frame_{frame_num}.svg")
+                    f"{output_dir}/{winning_trial}/best_frame_{frame_num}.svg")
         copyfile(f"{output_dir}/{winning_trial}/best_iter_video.mp4",
-                    f"{output_dir}/{winning_trial}_best_video.mp4")
+                    f"{output_dir}/{winning_trial}/best_video.mp4")
         copyfile(f"{output_dir}/{winning_trial}/points_mlp.pt",
                 f"{output_dir}/points_mlp.pt")
 
