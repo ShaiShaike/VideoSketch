@@ -23,6 +23,8 @@ from skimage import morphology
 from skimage.measure import label 
 from models.painter_params import MLP, WidthMLP, MotionMLP
 from shutil import copyfile
+import cv2
+from pathlib import Path
 
 
 
@@ -556,12 +558,11 @@ def inference_video(args, eps=1e-4):
     orig_shape = points.shape
     points = points.reshape((-1, 2))
     num_points = points.shape[0]
-    import cv2
     cap = cv2.VideoCapture(args.video_path)
 
-    outcrop = cv2.VideoWriter(f"{output_path}/best_iter_video.mp4", -1,
+    outcrop = cv2.VideoWriter(str(Path(output_path) / 'best_iter_video.mp4'), -1,
                               cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
-    print('saving:', f"{output_path}/best_iter_video.mp4")
+    print('saving:', str(Path(output_path) / 'best_iter_video.mp4'))
     cap.release()
 
     end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
