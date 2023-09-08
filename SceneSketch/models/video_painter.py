@@ -65,7 +65,7 @@ class VideoPainter(Painter):
         cap = cv2.VideoCapture(args.video_path)
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        assert args.start_frame >= 0 and args.start_frame < args.end_frame and args.end_frame < frame_count
+        assert args.start_frame >= 0 and args.start_frame <= args.end_frame and args.end_frame < frame_count
         
         if not self.workdir.exists():
             makedirs(str(self.workdir))
