@@ -568,11 +568,10 @@ def inference_video(args, eps=1e-4):
 
     end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
     for frame_num in range(args.start_frame, end_frame):
-        # timeframe = torch.ones((num_points, 1), device=device) * frame_num
-        # points_and_time = torch.cat([points, timeframe], dim=1)
-        # frame_points = motion_mlp(points_and_time)
-        # frame_points = frame_points.reshape(orig_shape)
-        frame_points = points
+        timeframe = torch.ones((num_points, 1), device=device) * frame_num
+        points_and_time = torch.cat([points, timeframe], dim=1)
+        frame_points = motion_mlp(points_and_time)
+        frame_points = frame_points.reshape(orig_shape)
 
         all_points = 0.5 * (frame_points + 1.0) * canvas_width
         all_points = all_points + eps * torch.randn_like(all_points)

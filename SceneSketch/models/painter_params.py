@@ -206,13 +206,13 @@ class Painter(torch.nn.Module):
         else:
             points = torch.stack(self.points_init).unsqueeze(0).to(self.device)
         
-        # if self.is_video:
-        #     points = points.reshape((-1, 2))
-        #     num_points = points.shape[0]
-        #     timeframe = torch.ones((num_points, 1), device=self.device) * self.frame_num
-        #     points_and_time = torch.cat([points, timeframe], dim=1)
-        #     points = self.motion_mlp(points_and_time)
-        #     points = points.reshape((-1, self.num_paths * self.control_points_per_seg * 2))
+        if self.is_video:
+            points = points.reshape((-1, 2))
+            num_points = points.shape[0]
+            timeframe = torch.ones((num_points, 1), device=self.device) * self.frame_num
+            points_and_time = torch.cat([points, timeframe], dim=1)
+            points = self.motion_mlp(points_and_time)
+            points = points.reshape((-1, self.num_paths * self.control_points_per_seg * 2))
 
         if self.width_optim and mode != "init": #first iter use just the location mlp
             widths_  = self.mlp_width(self.init_widths).clamp(min=1e-8)
@@ -917,7 +917,7 @@ class MotionMLP(nn.Module):
         # x should be of dimenthin (num_points, 3) - 3 for coordinates + timeframe
         deltas = self.layers_points(x)
 
-        return x[:, :2] #+ 0.1 * deltas
+        return x[:, :2] + 0.1 * deltas
 
 
 class WidthMLP(nn.Module):

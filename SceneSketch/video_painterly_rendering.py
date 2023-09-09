@@ -111,7 +111,7 @@ def main(args):
                 f"{args.output_dir}", f"init")
 
     for epoch in epoch_range:
-        batch_frame_indexes = 30 # nprandint(args.start_frame, args.end_frame + 1) # Todo: args.batch_size
+        batch_frame_indexes = nprandint(args.start_frame, args.end_frame + 1) # Todo: args.batch_size
         if not args.display:
             epoch_range.refresh()
         start = time.time()
