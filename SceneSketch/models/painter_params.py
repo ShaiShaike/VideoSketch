@@ -917,7 +917,7 @@ class MotionMLP(nn.Module):
         # x should be of dimenthin (num_points, 3) - 3 for coordinates + timeframe
         deltas = self.layers_points(x)
 
-        return x[:, :2] + 0.1 * deltas
+        return x[:, :2] #+ 0.1 * deltas
 
 
 class WidthMLP(nn.Module):
