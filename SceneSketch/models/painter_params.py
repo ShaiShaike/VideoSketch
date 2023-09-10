@@ -904,10 +904,10 @@ class MotionMLP(nn.Module):
     def __init__(self):
         super().__init__()
         inner_dim = 1000
-        self.linear_1 = nn.Linear(3, inner_dim),
-        self.activation_1 = nn.SELU(inplace=True),
-        self.linear_2 = nn.Linear(inner_dim + 1, inner_dim),
-        self.activation_2 = nn.SELU(inplace=True),
+        self.linear_1 = nn.Linear(3, inner_dim)
+        self.activation_1 = nn.SELU(inplace=True)
+        self.linear_2 = nn.Linear(inner_dim + 1, inner_dim)
+        self.activation_2 = nn.SELU(inplace=True)
         self.linear_3 = nn.Linear(inner_dim + 1, 2)
         
 
