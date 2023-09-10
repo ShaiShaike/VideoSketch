@@ -915,7 +915,7 @@ class MotionMLP(nn.Module):
         '''Forward pass'''
         # x should be of dimenthin (num_points, 3) - 3 for coordinates + timeframe
         coordinates = x[:, :2]
-        timeframe = x[:, 2]
+        timeframe = torch.unsqueeze(x[:, 2], dim=1)
 
         deltas = self.linear_1(x)
         deltas = self.activation_1(deltas)
