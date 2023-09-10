@@ -904,20 +904,30 @@ class MotionMLP(nn.Module):
     def __init__(self):
         super().__init__()
         inner_dim = 1000
-        self.layers_points = nn.Sequential(
-            nn.Linear(3, inner_dim),
-            nn.SELU(inplace=True),
-            nn.Linear(inner_dim, inner_dim),
-            nn.SELU(inplace=True),
-            nn.Linear(inner_dim, 2)
-        )
+        self.linear_1 = nn.Linear(3, inner_dim),
+        self.activation_1 = nn.SELU(inplace=True),
+        self.linear_2 = nn.Linear(inner_dim + 1, inner_dim),
+        self.activation_2 = nn.SELU(inplace=True),
+        self.linear_3 = nn.Linear(inner_dim + 1, 2)
+        
 
     def forward(self, x):
         '''Forward pass'''
         # x should be of dimenthin (num_points, 3) - 3 for coordinates + timeframe
-        deltas = self.layers_points(x)
+        coordinates = x[:, :2]
+        timeframe = x[:, 2]
 
-        return x[:, :2] + 0.1 * deltas
+        deltas = self.linear_1(x)
+        deltas = self.activation_1(deltas)
+
+        deltas = torch.cat([deltas, timeframe], dim=1)
+        deltas = self.linear_2(deltas)
+        deltas = self.activation_2(deltas)
+
+        deltas = torch.cat([deltas, timeframe], dim=1)
+        deltas = self.linear_3(deltas)
+
+        return coordinates + 0.1 * deltas
 
 
 class WidthMLP(nn.Module):
