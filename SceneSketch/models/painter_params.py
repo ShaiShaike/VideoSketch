@@ -207,12 +207,17 @@ class Painter(torch.nn.Module):
             points = torch.stack(self.points_init).unsqueeze(0).to(self.device)
         
         if self.is_video:
-            points = points.reshape((-1, 2))
-            num_points = points.shape[0]
-            timeframe = torch.ones((num_points, 1), device=self.device) * self.frame_num
+            # points = points.reshape((-1, 2))
+            # num_points = points.shape[0]
+            # timeframe = torch.ones((num_points, 1), device=self.device) * self.frame_num
+            # points_and_time = torch.cat([points, timeframe], dim=1)
+            # points = self.motion_mlp(points_and_time)
+            # points = points.reshape((-1, self.num_paths * self.control_points_per_seg * 2))
+
+            num_batch = points.shape[0]
+            timeframe = torch.ones((num_batch, 1), device=self.device) * self.frame_num
             points_and_time = torch.cat([points, timeframe], dim=1)
             points = self.motion_mlp(points_and_time)
-            points = points.reshape((-1, self.num_paths * self.control_points_per_seg * 2))
 
         if self.width_optim and mode != "init": #first iter use just the location mlp
             widths_  = self.mlp_width(self.init_widths).clamp(min=1e-8)
@@ -901,6 +906,36 @@ class MLP(nn.Module):
 
 
 class MotionMLP(nn.Module):
+    def __init__(self, num_strokes, num_cp):
+        super().__init__()
+        inner_dim = 1000
+        self.linear_1 = nn.Linear(num_strokes * num_cp * 2 + 1, inner_dim)
+        self.activation_1 = nn.SELU(inplace=True)
+        self.linear_2 = nn.Linear(inner_dim + 1, inner_dim)
+        self.activation_2 = nn.SELU(inplace=True)
+        self.linear_3 = nn.Linear(inner_dim + 1, num_strokes * num_cp * 2)
+        
+
+    def forward(self, x):
+        '''Forward pass'''
+        # x should be of dimenthin (num_points, 3) - 3 for coordinates + timeframe
+        coordinates = x[:, :-1]
+        timeframe = torch.unsqueeze(x[:, -1], dim=1)
+
+        deltas = self.linear_1(x)
+        deltas = self.activation_1(deltas)
+
+        deltas = torch.cat([deltas, timeframe], dim=1)
+        deltas = self.linear_2(deltas)
+        deltas = self.activation_2(deltas)
+
+        deltas = torch.cat([deltas, timeframe], dim=1)
+        deltas = self.linear_3(deltas)
+
+        return coordinates + 0.1 * deltas
+
+
+class MotionMLPOld(nn.Module):
     def __init__(self):
         super().__init__()
         inner_dim = 1000

@@ -555,9 +555,9 @@ def inference_video(args, eps=1e-4):
         stroke_probs = hard_mask[:, 0]
         widths = stroke_probs * init_widths   
         
-    orig_shape = points.shape
-    points = points.reshape((-1, 2))
-    num_points = points.shape[0]
+    # orig_shape = points.shape
+    # points = points.reshape((-1, 2))
+    # num_points = points.shape[0]
     cap = cv2.VideoCapture(args.video_path)
 
     outcrop = cv2.VideoWriter(str(Path(output_path) / 'best_iter_video.mp4'), -1,
@@ -568,10 +568,15 @@ def inference_video(args, eps=1e-4):
 
     end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
     for frame_num in range(args.start_frame, end_frame):
-        timeframe = torch.ones((num_points, 1), device=device) * frame_num
+        # timeframe = torch.ones((num_points, 1), device=device) * frame_num
+        # points_and_time = torch.cat([points, timeframe], dim=1)
+        # frame_points = motion_mlp(points_and_time)
+        # frame_points = frame_points.reshape(orig_shape)
+
+        num_batch = points.shape[0]
+        timeframe = torch.ones((num_batch, 1), device=device) * frame_num
         points_and_time = torch.cat([points, timeframe], dim=1)
         frame_points = motion_mlp(points_and_time)
-        frame_points = frame_points.reshape(orig_shape)
 
         all_points = 0.5 * (frame_points + 1.0) * canvas_width
         all_points = all_points + eps * torch.randn_like(all_points)
