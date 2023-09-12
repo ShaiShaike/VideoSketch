@@ -90,7 +90,7 @@ class Painter(torch.nn.Module):
         self.is_video = is_video
         if self.is_video:
             self.frame_num = 0
-            self.motion_mlp = MotionMLP().to(device) if self.mlp_train else None
+            self.motion_mlp = MotionMLP(num_strokes=self.num_paths, num_cp=self.control_points_per_seg).to(device) if self.mlp_train else None
         
         self.mlp_points_weights_path = args.mlp_points_weights_path
         self.mlp_points_weight_init()
