@@ -561,7 +561,7 @@ def inference_video(args, eps=1e-4):
     cap = cv2.VideoCapture(args.video_path)
 
     outcrop = cv2.VideoWriter(str(Path(output_path) / 'best_iter_video.mp4'), -1,
-                              cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width), False)
+                              cap.get(cv2.CAP_PROP_FPS), (canvas_width, canvas_height))
     print('saving:', str(Path(output_path) / 'best_iter_video.mp4'))
     print(-1, cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
     cap.release()
@@ -618,10 +618,26 @@ def inference_video(args, eps=1e-4):
         img = opacity * img[:, :, :3] + torch.ones(img.shape[0], img.shape[1], 3, device=device) * (1 - opacity)
         img = img[:, :, :3].cpu().detach().numpy().astype('uint8')
         cv2.imwrite(f"{output_path}/best_iter_frame_{frame_num}.png", img * 255)
-        print('img.shape', img.shape, 'max:', np.max(img), 'min:', np.max(min))
-        outcrop.write(img[:, :, ::-1] * 255)
+        print('img.shape', img.shape, 'max:', np.max(img), 'min:', np.min(img))
+        outcrop.write(img * 255)
         print(f'wrote frame {frame_num}')
     outcrop.release()
 
+    make_video(str(output_path), str(Path(output_path) / 'best_iter_video2.mp4'), args.start_frame, end_frame)
 
+
+def make_video(input_path: str, output_path: str, first_frame: int, last_frame: int):
+
+    input_path = Path(input_path)
+
+    image = cv2.imread(str(input_path / f'best_iter_frame_{first_frame}.png'))
+    size = image.shape[:2]
+
+    outcrop = cv2.VideoWriter(output_path, -1,
+                              30, size)
+    for frame_num in range(first_frame, last_frame):
+        image = cv2.imread(str(input_path / f'best_iter_frame_{frame_num}.png'))
+        outcrop.write(image)
+    
+    outcrop.release()
 
