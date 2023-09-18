@@ -64,6 +64,7 @@ parser.add_argument("--mask_attention", type=int, default=0)
 parser.add_argument("--use_wandb", type=int, default=0)
 parser.add_argument("--wandb_project_name", type=str, default="")
 parser.add_argument("--mask_cls", type=str, default="none")
+parser.add_argument("--width", type=float, default=1.5)
 parser.add_argument("--width_optim", type=int, default=0)
 parser.add_argument("--width_loss_weight", type=str, default="0")
 parser.add_argument("--optimize_points", type=int, default=1)
@@ -162,6 +163,7 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--dilated_mask", str(args.dilated_mask),
                             "--clip_conv_loss_type", str(args.clip_conv_loss_type),
                             "--mask_cls", args.mask_cls,
+                            "--width", str(args.width),
                             "--width_optim", str(args.width_optim),
                             "--width_loss_weight", str(args.width_loss_weight),
                             "--mask_attention", str(args.mask_attention),
