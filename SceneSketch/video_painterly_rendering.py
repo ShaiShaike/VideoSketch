@@ -110,8 +110,19 @@ def main(args):
         renderer.save_svg(
                 f"{args.output_dir}", f"init")
 
+    center_margins = max(args.center_frame - args.start_frame,
+                         args.end_frame - args.center_frame)
+    
     for epoch in epoch_range:
-        batch_frame_indexes = nprandint(args.start_frame, args.end_frame + 1) # Todo: args.batch_size
+        # Todo: args.batch_size
+        if args.center_frame < 0:
+            batch_frame_indexes = nprandint(args.start_frame, args.end_frame + 1)
+        else:
+            epoch_margins = min(int(epoch * args.center_interval_ratio / args.num_iter * center_margins), center_margins)
+            batch_frame_indexes = nprandint(
+                max(args.center_frame - epoch_margins, args.start_frame),
+                min(args.center_frame + epoch_margins, args.end_frame) + 1)
+        
         if not args.display:
             epoch_range.refresh()
         start = time.time()

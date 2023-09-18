@@ -26,6 +26,8 @@ parser.add_argument("--video_path", help="target video path")
 parser.add_argument("--workdir", help="directory path to save temps")
 parser.add_argument("--start_frame", type=int, default=0)
 parser.add_argument("--end_frame", type=int, default=-1)
+parser.add_argument("--center_frame", type=int, default=-1)
+parser.add_argument("--center_interval_ratio", type=float, default=1.5)
 parser.add_argument("--pre_resize", type=int, default=0)
 parser.add_argument("--center_crop", type=int, default=0)
 parser.add_argument("--output_pref", type=str, default="for_arik",
@@ -136,6 +138,8 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
     exit_code = sp.run(["python", "video_painterly_rendering.py", target, tempdir,
                             "--start_frame", str(args.start_frame),
                             "--end_frame", str(args.end_frame),
+                            "--center_frame", str(args.center_frame),
+                            "--center_interval_ratio", str(args.center_interval_ratio),
                             "--pre_resize", str(args.pre_resize),
                             "--center_crop", str(args.center_crop),
                             "--num_paths", str(args.num_strokes),

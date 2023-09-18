@@ -180,6 +180,8 @@ def parse_video_arguments():
     parser.add_argument("workdir", help="directory path to save temps")
     parser.add_argument("--start_frame", type=int, default=0)
     parser.add_argument("--end_frame", type=int, default=-1)
+    parser.add_argument("--center_frame", type=int, default=-1)
+    parser.add_argument("--center_interval_ratio", type=float, default=1.5)
     parser.add_argument("--output_dir", type=str,
                         help="directory to save the output images and loss")
     parser.add_argument("--path_svg", type=str, default="none",
