@@ -129,11 +129,13 @@ def main(args):
         optimizer.zero_grad_()
         renderer.load_clip_attentions_and_mask(batch_frame_indexes)
         inputs = renderer.get_target(batch_frame_indexes)
-        sketches = renderer.get_image().to(args.device)
+        sketches, motions = renderer.get_image().to(args.device)
         losses_dict_weighted, losses_dict_norm, losses_dict_original = loss_func(
             sketches, inputs.detach(), counter, renderer.get_widths(), renderer, optimizer,
             mode="train", width_opt=renderer.width_optim)
-        loss = sum(list(losses_dict_weighted.values()))
+        motion_regularization = motions[:, 1:] - motions[:, :-1]
+        motion_regularization = motion_regularization * motion_regularization
+        loss = sum(list(losses_dict_weighted.values())) + args.motion_reg_ratio * sum(motion_regularization)
         loss.backward()
         optimizer.step_()
 

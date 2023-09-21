@@ -176,7 +176,10 @@ class Painter(torch.nn.Module):
 
     def get_image(self, mode="train"):
         if self.mlp_train:
-            img = self.mlp_pass(mode)
+            if self.is_video:
+                img, motions = self.mlp_pass(mode)
+            else:
+                img = self.mlp_pass(mode)
         else:
             img = self.render_warp(mode)
         opacity = img[:, :, 3:4]
@@ -185,6 +188,8 @@ class Painter(torch.nn.Module):
         # Convert img from HWC to NCHW
         img = img.unsqueeze(0)
         img = img.permute(0, 3, 1, 2).to(self.device) # NHWC -> NCHW
+        if self.is_video:
+            return img, motions
         return img
     
     def mlp_pass(self, mode, eps=1e-4):
@@ -217,7 +222,8 @@ class Painter(torch.nn.Module):
             num_batch = points.shape[0]
             timeframe = torch.ones((num_batch, 1), device=self.device) * self.frame_num
             points_and_time = torch.cat([points, timeframe], dim=1)
-            points = self.motion_mlp(points_and_time)
+            points, motions = self.motion_mlp(points_and_time, get_detlas=True)
+            motions = motions.reshape((-1, self.num_paths, self.control_points_per_seg, 2))
 
         if self.width_optim and mode != "init": #first iter use just the location mlp
             widths_  = self.mlp_width(self.init_widths).clamp(min=1e-8)
@@ -270,6 +276,8 @@ class Painter(torch.nn.Module):
                     *scene_args)
         self.shapes = shapes.copy()
         self.shape_groups = shape_groups.copy()
+        if self.is_video:
+            return img, motions
         return img
         
 
@@ -916,7 +924,7 @@ class MotionMLP(nn.Module):
         self.linear_3 = nn.Linear(inner_dim + 1, num_strokes * num_cp * 2)
         
 
-    def forward(self, x):
+    def forward(self, x, get_detlas=False):
         '''Forward pass'''
         # x should be of dimenthin (num_points, 3) - 3 for coordinates + timeframe
         coordinates = x[:, :-1]
@@ -932,7 +940,10 @@ class MotionMLP(nn.Module):
         deltas = torch.cat([deltas, timeframe], dim=1)
         deltas = self.linear_3(deltas)
 
-        return coordinates + 0.1 * deltas
+        if get_detlas:
+            return coordinates + 0.1 * deltas, 0.1 * deltas
+        else:
+            return coordinates + 0.1 * deltas
 
 
 class MotionMLPOld(nn.Module):

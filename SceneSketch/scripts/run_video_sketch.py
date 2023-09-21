@@ -27,6 +27,7 @@ parser.add_argument("--workdir", help="directory path to save temps")
 parser.add_argument("--start_frame", type=int, default=0)
 parser.add_argument("--end_frame", type=int, default=-1)
 parser.add_argument("--center_frame", type=int, default=-1)
+parser.add_argument("--motion_reg_ratio", type=float, default=0.)
 parser.add_argument("--center_interval_ratio", type=float, default=1.5)
 parser.add_argument("--pre_resize", type=int, default=0)
 parser.add_argument("--center_crop", type=int, default=0)
@@ -139,6 +140,7 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--start_frame", str(args.start_frame),
                             "--end_frame", str(args.end_frame),
                             "--center_frame", str(args.center_frame),
+                            "--motion_reg_ratio", str(args.motion_reg_ratio),
                             "--center_interval_ratio", str(args.center_interval_ratio),
                             "--pre_resize", str(args.pre_resize),
                             "--center_crop", str(args.center_crop),
