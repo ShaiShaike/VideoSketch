@@ -385,7 +385,9 @@ class Painter(torch.nn.Module):
                         self.optimize_flag[i] = False
 
         if self.width_optim:
-            return self.points_vars, self.mlp_width.parameters()    
+            return self.points_vars, self.mlp_width.parameters()
+        if self.is_video:
+            return self.points_vars, self.motion_mlp.parameters()
         return self.points_vars
     
     def get_mlp(self):
