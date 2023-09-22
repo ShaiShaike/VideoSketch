@@ -106,7 +106,7 @@ def main(args):
         optimizer.turn_off_points_optim()
     
     with torch.no_grad():
-        init_sketches = renderer.get_image("init").to(args.device)
+        init_sketches, init_motions = (tensor.to(args.device) for tensor in renderer.get_image("init"))
         renderer.save_svg(
                 f"{args.output_dir}", f"init")
 
