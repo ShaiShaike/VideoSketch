@@ -129,7 +129,7 @@ def main(args):
         optimizer.zero_grad_()
         renderer.load_clip_attentions_and_mask(batch_frame_indexes)
         inputs = renderer.get_target(batch_frame_indexes)
-        sketches, motions = renderer.get_image().to(args.device)
+        sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
         losses_dict_weighted, losses_dict_norm, losses_dict_original = loss_func(
             sketches, inputs.detach(), counter, renderer.get_widths(), renderer, optimizer,
             mode="train", width_opt=renderer.width_optim)
@@ -165,9 +165,11 @@ def main(args):
                 #Todo: evaluate by last frame or by first, middle last
                 renderer.load_clip_attentions_and_mask(args.end_frame)
                 inputs = renderer.get_target(args.end_frame)
-                sketches = renderer.get_image().to(args.device)
+                sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
                 losses_dict_weighted_eval, losses_dict_norm_eval, losses_dict_original_eval = loss_func(sketches, inputs, counter, renderer.get_widths(), renderer=renderer, mode="eval", width_opt=renderer.width_optim)
-                loss_eval = sum(list(losses_dict_weighted_eval.values()))
+                motion_regularization_eval = motions[:, 1:] - motions[:, :-1]
+                motion_regularization_eval = motion_regularization_eval * motion_regularization_eval
+                loss_eval = sum(list(losses_dict_weighted_eval.values())) + args.motion_reg_ratio * sum(motion_regularization_eval)
                 configs_to_save["loss_eval"].append(loss_eval.item())
                 if "num_strokes" not in configs_to_save.keys():
                     configs_to_save["num_strokes"] = []
