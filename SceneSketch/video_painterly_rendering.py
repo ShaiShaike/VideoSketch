@@ -135,7 +135,7 @@ def main(args):
             mode="train", width_opt=renderer.width_optim)
         motion_regularization = motions[:, 1:] - motions[:, :-1]
         motion_regularization = motion_regularization * motion_regularization
-        loss = sum(list(losses_dict_weighted.values())) + args.motion_reg_ratio * sum(motion_regularization)
+        loss = sum(list(losses_dict_weighted.values())) #+ args.motion_reg_ratio * sum(motion_regularization)
         loss.backward()
         optimizer.step_()
 
@@ -169,7 +169,7 @@ def main(args):
                 losses_dict_weighted_eval, losses_dict_norm_eval, losses_dict_original_eval = loss_func(sketches, inputs, counter, renderer.get_widths(), renderer=renderer, mode="eval", width_opt=renderer.width_optim)
                 motion_regularization_eval = motions[:, 1:] - motions[:, :-1]
                 motion_regularization_eval = motion_regularization_eval * motion_regularization_eval
-                loss_eval = sum(list(losses_dict_weighted_eval.values())) + args.motion_reg_ratio * sum(motion_regularization_eval)
+                loss_eval = sum(list(losses_dict_weighted_eval.values())) #+ args.motion_reg_ratio * sum(motion_regularization_eval)
                 configs_to_save["loss_eval"].append(loss_eval.item())
                 if "num_strokes" not in configs_to_save.keys():
                     configs_to_save["num_strokes"] = []
