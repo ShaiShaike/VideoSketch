@@ -36,7 +36,7 @@ parser.add_argument("--output_pref", type=str, default="for_arik",
 parser.add_argument("--num_strokes", type=int, default=64,
                     help="number of strokes used to generate the sketch, this defines the level of abstraction.")
 parser.add_argument("--control_points_per_seg", type=int, default=4)
-parser.add_argument("--image_scale", type=int, default=224)
+parser.add_argument("--im_scale", type=int, default=224)
 parser.add_argument("--num_iter", type=int, default=2001,
                     help="number of iterations")
 parser.add_argument("--test_name", type=str, default="test",
