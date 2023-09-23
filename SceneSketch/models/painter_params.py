@@ -43,7 +43,6 @@ class Painter(torch.nn.Module):
         self.shape_groups = []
         self.device = device
         self.canvas_width, self.canvas_height = imsize, imsize
-        print('self.canvas_width, self.canvas_height', self.canvas_width, self.canvas_height)
         self.points_vars = []
         self.points_init = [] # for mlp training
         self.color_vars = []
@@ -431,7 +430,6 @@ class Painter(torch.nn.Module):
         return self.num_paths
         
     def is_in_canvas(self, canvas_width, canvas_height, path):
-        print('canvas_width, canvas_height', canvas_width, canvas_height)
         shapes, shape_groups = [], []
         stroke_color = torch.tensor([0.0, 0.0, 0.0, 1.0])
         shapes.append(path)
@@ -527,7 +525,6 @@ class Painter(torch.nn.Module):
                     preprocess.transforms[-1],
                 ])
         self.image_input_attn_clip = data_transforms(target_im).to(self.device)
-        print('self.image_input_attn_clip', self.self.image_input_attn_clip.size())
 
     def clip_attn(self):
         model, preprocess = clip.load(self.saliency_clip_model, device=self.device, jit=False)

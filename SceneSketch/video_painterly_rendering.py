@@ -35,7 +35,6 @@ import matplotlib.pyplot as plt
 
 
 def load_renderer(args):
-    print('args.image_scale 1', args.image_scale)
     renderer = VideoPainter(args=args, num_strokes=args.num_paths,
                             num_segments=args.num_segments,
                             imsize=args.image_scale,
