@@ -560,9 +560,9 @@ def inference_video(args, eps=1e-4):
     # num_points = points.shape[0]
     cap = cv2.VideoCapture(args.video_path)
 
-    outcrop = cv2.VideoWriter(f"{output_path} / best_iter_video.mp4", -1,
+    outcrop = cv2.VideoWriter(f"{output_path}/best_iter_video.mp4", -1,
                               cap.get(cv2.CAP_PROP_FPS), (canvas_width, canvas_height))
-    print('saving:', f"{output_path} / best_iter_video.mp4")
+    print('saving:', f"{output_path}/best_iter_video.mp4")
     print(-1, cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
     cap.release()
 
@@ -623,7 +623,7 @@ def inference_video(args, eps=1e-4):
         print(f'wrote frame {frame_num}')
     outcrop.release()
 
-    make_video(str(output_path), f"{output_path} / best_iter_video2.mp4", args.start_frame, end_frame)
+    make_video(str(output_path), f"{output_path}/best_iter_video2.mp4", args.start_frame, end_frame)
 
 
 def make_video(input_path: str, output_path: str, first_frame: int, last_frame: int):

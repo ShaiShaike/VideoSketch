@@ -35,6 +35,8 @@ parser.add_argument("--output_pref", type=str, default="for_arik",
                     help="target image file, located in <target_images>")
 parser.add_argument("--num_strokes", type=int, default=64,
                     help="number of strokes used to generate the sketch, this defines the level of abstraction.")
+parser.add_argument("--control_points_per_seg", type=int, default=4)
+parser.add_argument("--image_scale", type=int, default=224)
 parser.add_argument("--num_iter", type=int, default=2001,
                     help="number of iterations")
 parser.add_argument("--test_name", type=str, default="test",
@@ -145,6 +147,8 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--pre_resize", str(args.pre_resize),
                             "--center_crop", str(args.center_crop),
                             "--num_paths", str(args.num_strokes),
+                            "--control_points_per_seg", str(args.control_points_per_seg),
+                            "--im_scale", str(args.im_scale),
                             "--output_dir", output_dir,
                             "--wandb_name", wandb_name,
                             "--num_iter", str(num_iter),

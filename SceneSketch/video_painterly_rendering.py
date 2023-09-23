@@ -135,6 +135,7 @@ def main(args):
             mode="train", width_opt=renderer.width_optim)
         motion_regularization = motions[:, 1:] - motions[:, :-1]
         motion_regularization = motion_regularization * motion_regularization
+        print('motion_regularization', motion_regularization.size())
         loss = sum(list(losses_dict_weighted.values())) #+ args.motion_reg_ratio * sum(motion_regularization)
         loss.backward()
         optimizer.step_()
