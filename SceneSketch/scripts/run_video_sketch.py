@@ -253,8 +253,8 @@ if __name__ == "__main__":
                     f"{output_dir}/{winning_trial}/best_frame_{frame_num}.svg")
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.png",
                     f"{output_dir}/{winning_trial}/best_frame_{frame_num}.png")
-        copyfile(f"{output_dir}/{winning_trial}/best_iter_video.mp4",
-                    f"{output_dir}/{winning_trial}/best_video.mp4")
+        # copyfile(f"{output_dir}/{winning_trial}/best_iter_video.mp4",
+        #             f"{output_dir}/{winning_trial}/best_video.mp4")
         copyfile(f"{output_dir}/{winning_trial}/points_mlp.pt",
                 f"{output_dir}/points_mlp.pt")
         copyfile(f"{output_dir}/{winning_trial}/width_mlp.pt",
@@ -276,8 +276,8 @@ if __name__ == "__main__":
                     f"{output_dir}/{winning_trial}/best_frame_{frame_num}.svg")
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.png",
                     f"{output_dir}/{winning_trial}/best_frame_{frame_num}.png")
-        copyfile(f"{output_dir}/{winning_trial}/best_iter_video.mp4",
-                    f"{output_dir}/{winning_trial}/best_video.mp4")
+        # copyfile(f"{output_dir}/{winning_trial}/best_iter_video.mp4",
+        #             f"{output_dir}/{winning_trial}/best_video.mp4")
         copyfile(f"{output_dir}/{winning_trial}/points_mlp.pt",
                 f"{output_dir}/points_mlp.pt")
 
