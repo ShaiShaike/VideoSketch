@@ -566,7 +566,8 @@ def inference_video(args, eps=1e-4):
     print(-1, cap.get(cv2.CAP_PROP_FPS), (canvas_height, canvas_width))
     cap.release()
 
-    end_frame = args.end_frame + 100 if args.end_frame != -1 else args.end_frame
+    slomotion = 3
+    end_frame = (args.end_frame + 100)*slomotion if args.end_frame != -1 else args.end_frame
     # end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
     for frame_num in range(args.start_frame, end_frame):
         # timeframe = torch.ones((num_points, 1), device=device) * frame_num
@@ -575,7 +576,7 @@ def inference_video(args, eps=1e-4):
         # frame_points = frame_points.reshape(orig_shape)
 
         num_batch = points.shape[0]
-        timeframe = torch.ones((num_batch, 1), device=device) * frame_num
+        timeframe = torch.ones((num_batch, 1), device=device) * frame_num / slomotion
         points_and_time = torch.cat([points, timeframe], dim=1)
         frame_points = motion_mlp(points_and_time)
 
