@@ -567,7 +567,7 @@ def inference_video(args, eps=1e-4):
     cap.release()
 
     slomotion = 3
-    end_frame = (args.end_frame + 100)*slomotion if args.end_frame != -1 else args.end_frame
+    end_frame = (args.end_frame - args.start_frame + 100)*slomotion + args.start_frame if args.end_frame != -1 else args.end_frame
     # end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
     for frame_num in range(args.start_frame, end_frame):
         # timeframe = torch.ones((num_points, 1), device=device) * frame_num
