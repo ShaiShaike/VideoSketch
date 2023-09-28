@@ -29,7 +29,7 @@ class VideoPainter(Painter):
         
         self.prep_video_inputs(args)
 
-        base_frame = (args.start_frame + args.end_frame) // 2
+        base_frame = (args.start_frame + args.end_frame) // 2 if args.center_frame < 0 else args.center_frame
         self.load_clip_attentions_and_mask(base_frame)
         self.attention_map = self.set_attention_map() if self.attention_init else None
         self.thresh = self.set_attention_threshold_map() if self.attention_init else None
