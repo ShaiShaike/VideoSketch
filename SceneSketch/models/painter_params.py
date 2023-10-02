@@ -177,6 +177,8 @@ class Painter(torch.nn.Module):
     def get_image(self, mode="train"):
         if self.mlp_train:
             if self.is_video:
+                if 'centerloss' in self.args.center_method:
+                    img, motions, center_img = self.mlp_pass(mode)
                 img, motions = self.mlp_pass(mode)
             else:
                 img = self.mlp_pass(mode)
@@ -189,6 +191,8 @@ class Painter(torch.nn.Module):
         img = img.unsqueeze(0)
         img = img.permute(0, 3, 1, 2).to(self.device) # NHWC -> NCHW
         if self.is_video:
+            if 'centerloss' in self.args.center_method:
+                return img, motions, center_img
             return img, motions
         return img
     
@@ -210,8 +214,10 @@ class Painter(torch.nn.Module):
             
         else:
             points = torch.stack(self.points_init).unsqueeze(0).to(self.device)
-        
+
         if self.is_video:
+            if 'centerloss' in self.args.center_method:
+                center_img, _, _ = self.points2image(points, mode, eps)
             # points = points.reshape((-1, 2))
             # num_points = points.shape[0]
             # timeframe = torch.ones((num_points, 1), device=self.device) * self.frame_num
@@ -232,6 +238,18 @@ class Painter(torch.nn.Module):
             hard_mask = torch.nn.functional.gumbel_softmax(v, self.gumbel_temp, False)
             self.stroke_probs = hard_mask[:, 0] * self.out_of_canvas_mask
             self.widths = self.stroke_probs * self.init_widths            
+        
+        img, shapes, shape_groups = self.points2image(points, mode, eps)
+
+        self.shapes = shapes.copy()
+        self.shape_groups = shape_groups.copy()
+        if self.is_video:
+            if 'centerloss' in self.args.center_method:
+                return img, motions, center_img
+            return img, motions
+        return img
+        
+    def points2image(self, points, mode, eps=1e-4):
         
         # normalize back to canvas size [0, 224] and reshape
         all_points = 0.5 * (points + 1.0) * self.canvas_width
@@ -274,12 +292,7 @@ class Painter(torch.nn.Module):
                     0,   # seed
                     None,
                     *scene_args)
-        self.shapes = shapes.copy()
-        self.shape_groups = shape_groups.copy()
-        if self.is_video:
-            return img, motions
-        return img
-        
+        return img, shapes, shape_groups
 
     def get_path(self):
         points = []

@@ -112,16 +112,22 @@ def main(args):
 
     center_margins = max(args.center_frame - args.start_frame,
                          args.end_frame - args.center_frame)
+    if 'centerloss' in args.center_method:
+        renderer.load_clip_attentions_and_mask(args.center_frame)
+        center_inputs = renderer.get_target(args.center_frame).detach()
+        center_mask = renderer.mask
     
+    center_weight = 0.5
+
     for epoch in epoch_range:
         # Todo: args.batch_size
-        if args.center_frame < 0:
-            batch_frame_indexes = nprandint(args.start_frame, args.end_frame + 1)
-        else:
+        if 'centeriter' in args.center_method:
             epoch_margins = min(int(epoch * args.center_interval_ratio / args.num_iter * center_margins), center_margins)
             batch_frame_indexes = nprandint(
                 max(args.center_frame - epoch_margins, args.start_frame),
                 min(args.center_frame + epoch_margins, args.end_frame) + 1)
+        else:
+            batch_frame_indexes = nprandint(args.start_frame, args.end_frame + 1)
         
         if not args.display:
             epoch_range.refresh()
@@ -129,14 +135,23 @@ def main(args):
         optimizer.zero_grad_()
         renderer.load_clip_attentions_and_mask(batch_frame_indexes)
         inputs = renderer.get_target(batch_frame_indexes)
-        sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
+        if 'centerloss' in args.center_method:
+            sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+            center_losses_dict_weighted, _, _ = loss_func(
+                center_sketches, center_inputs, counter, renderer.get_widths(), renderer, optimizer,
+                mode="train", width_opt=renderer.width_optim, mask=center_mask)
+        else:
+            sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
         losses_dict_weighted, losses_dict_norm, losses_dict_original = loss_func(
             sketches, inputs.detach(), counter, renderer.get_widths(), renderer, optimizer,
             mode="train", width_opt=renderer.width_optim)
         motion_regularization = motions[:, 1:] - motions[:, :-1]
         motion_regularization = motion_regularization * motion_regularization
         args.motion_reg_ratio *= 0.998
+        # center_weight *= 0.998
         loss = sum(list(losses_dict_weighted.values())) + args.motion_reg_ratio * torch.sum(motion_regularization)
+        if 'centerloss' in args.center_method:
+            loss += center_weight * sum(list(center_losses_dict_weighted.values()))
         loss.backward()
         optimizer.step_()
 

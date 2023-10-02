@@ -110,8 +110,10 @@ class Loss(nn.Module):
         
     
 
-    def forward(self, sketches, targets, epoch, widths=None, renderer=None, optimizer=None, mode="train", width_opt=None):
+    def forward(self, sketches, targets, epoch, widths=None, renderer=None, optimizer=None, mode="train", width_opt=None, mask=None):
         loss = 0
+        mask = renderer.mask if mask is None else mask
+        
         self.update_losses_to_apply(epoch, width_opt, mode)
 
         losses_dict = {}
@@ -123,7 +125,7 @@ class Loss(nn.Module):
         for loss_name in self.losses_to_apply:
             if loss_name in ["clip_conv_loss", "clip_mask_loss"]:
                 conv_loss = self.loss_mapper[loss_name](
-                    sketches, targets, mode, renderer.mask)
+                    sketches, targets, mode, mask)
                 for layer in conv_loss.keys():
                     if "normalization" in layer:
                         loss_coeffs[layer] = 0 # include layer 11 in gradnorm but not in final loss

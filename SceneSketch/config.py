@@ -181,6 +181,7 @@ def parse_video_arguments():
     parser.add_argument("--start_frame", type=int, default=0)
     parser.add_argument("--end_frame", type=int, default=-1)
     parser.add_argument("--center_frame", type=int, default=-1)
+    parser.add_argument("--center_method", type=str, default='none')
     parser.add_argument("--motion_reg_ratio", type=float, default=0.)
     parser.add_argument("--center_interval_ratio", type=float, default=1.5)
     parser.add_argument("--output_dir", type=str,
