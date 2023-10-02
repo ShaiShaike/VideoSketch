@@ -29,16 +29,14 @@ class VideoPainter(Painter):
         
         self.prep_video_inputs(args)
 
-        base_frame = (args.start_frame + args.end_frame) // 2 if args.center_frame < 0 else args.center_frame
-        self.load_clip_attentions_and_mask(base_frame)
+        self.base_frame = (args.start_frame + args.end_frame) // 2 if args.center_frame < 0 else args.center_frame
+        self.load_clip_attentions_and_mask(self.base_frame)
         self.attention_map = self.set_attention_map() if self.attention_init else None
         self.thresh = self.set_attention_threshold_map() if self.attention_init else None
 
-            
     def get_motion_mlp(self):
         return self.motion_mlp
     
-
     def load_clip_attentions_and_mask(self, frame_index):
         self.frame_num = frame_index
         attentions_path = self.workdir / f"clip_attentions_{frame_index}.t"
@@ -49,7 +47,7 @@ class VideoPainter(Painter):
         mask = torch.load(str(mask_path)).to(self.device)
         self.mask = 1- mask if self.reverse_mask else mask
         if self.attention_init:
-            self.attention_map = np.load(str(self.workdir / f"attention_map_{frame_index}.npy"))
+            self.attention_map = np.load(str(self.workdir / f"attention_map_{self.base_frame}.npy"))
         else:
             self.attention_map = None
 
