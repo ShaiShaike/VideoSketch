@@ -153,7 +153,7 @@ def main(args):
         motion_regularization = motions[:, 1:] - motions[:, :-1]
         motion_regularization = motion_regularization * motion_regularization
         args.motion_reg_ratio *= 0.998
-        # center_weight *= 0.998
+        center_weight = np.sin(np.pi * epoch / args.num_iter)
         loss = sum(list(losses_dict_weighted.values())) + args.motion_reg_ratio * torch.sum(motion_regularization)
         if 'centerloss' in args.center_method:
             loss += center_weight * sum(list(center_losses_dict_weighted.values()))
