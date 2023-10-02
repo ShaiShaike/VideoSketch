@@ -113,7 +113,10 @@ def main(args):
         center_mask = renderer.mask
     print('1:', args.center_method, 'centerloss' in args.center_method)
     with torch.no_grad():
-        init_sketches, init_motions = (tensor.to(args.device) for tensor in renderer.get_image("init"))
+        if 'centerloss' in args.center_method:
+            init_sketches, init_motions, _ = (tensor.to(args.device) for tensor in renderer.get_image("init"))
+        else:  
+            init_sketches, init_motions = (tensor.to(args.device) for tensor in renderer.get_image("init"))
         renderer.save_svg(
                 f"{args.output_dir}", f"init")
     
@@ -181,7 +184,10 @@ def main(args):
                 #Todo: evaluate by last frame or by first, middle last
                 renderer.load_clip_attentions_and_mask(args.end_frame)
                 inputs = renderer.get_target(args.end_frame)
-                sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
+                if 'centerloss' in args.center_method:
+                    sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+                else:
+                    sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
                 losses_dict_weighted_eval, losses_dict_norm_eval, losses_dict_original_eval = loss_func(sketches, inputs, counter, renderer.get_widths(), renderer=renderer, mode="eval", width_opt=renderer.width_optim)
                 motion_regularization_eval = motions[:, 1:] - motions[:, :-1]
                 motion_regularization_eval = motion_regularization_eval * motion_regularization_eval
