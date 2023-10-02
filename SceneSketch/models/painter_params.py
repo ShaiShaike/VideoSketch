@@ -180,6 +180,13 @@ class Painter(torch.nn.Module):
             if self.is_video:
                 if 'centerloss' in self.args.center_method:
                     img, motions, center_img = self.mlp_pass(mode)
+                    center_opacity = center_img[:, :, 3:4]
+                    center_img = center_opacity * center_img[:, :, :3] + torch.ones(
+                        center_img.shape[0], center_img.shape[1], 3, device = self.device) * (1 - center_opacity)
+                    center_img = center_img[:, :, :3]
+                    # Convert img from HWC to NCHW
+                    center_img = center_img.unsqueeze(0)
+                    center_img = center_img.permute(0, 3, 1, 2).to(self.device) # NHWC -> NCHW
                 else:
                     img, motions = self.mlp_pass(mode)
             else:
