@@ -104,11 +104,6 @@ def main(args):
         # start with width optim and than switch every switch_loss iterations
         renderer.turn_off_points_optim()
         optimizer.turn_off_points_optim()
-    
-    with torch.no_grad():
-        init_sketches, init_motions = (tensor.to(args.device) for tensor in renderer.get_image("init"))
-        renderer.save_svg(
-                f"{args.output_dir}", f"init")
 
     center_margins = max(args.center_frame - args.start_frame,
                          args.end_frame - args.center_frame)
@@ -116,6 +111,11 @@ def main(args):
         renderer.load_clip_attentions_and_mask(args.center_frame)
         center_inputs = renderer.get_target(args.center_frame).detach()
         center_mask = renderer.mask
+    print('1:', args.center_method, 'centerloss' in args.center_method)
+    with torch.no_grad():
+        init_sketches, init_motions = (tensor.to(args.device) for tensor in renderer.get_image("init"))
+        renderer.save_svg(
+                f"{args.output_dir}", f"init")
     
     center_weight = 0.5
 

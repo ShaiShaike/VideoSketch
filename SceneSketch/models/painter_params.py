@@ -26,6 +26,7 @@ class Painter(torch.nn.Module):
         super(Painter, self).__init__()
 
         self.args = args
+        print('2:', self.args.center_method, 'centerloss' in self.args.center_method)
         self.num_paths = num_strokes
         self.num_segments = num_segments
         self.width = args.width
