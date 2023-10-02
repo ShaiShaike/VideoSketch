@@ -180,7 +180,8 @@ class Painter(torch.nn.Module):
             if self.is_video:
                 if 'centerloss' in self.args.center_method:
                     img, motions, center_img = self.mlp_pass(mode)
-                img, motions = self.mlp_pass(mode)
+                else:
+                    img, motions = self.mlp_pass(mode)
             else:
                 img = self.mlp_pass(mode)
         else:
