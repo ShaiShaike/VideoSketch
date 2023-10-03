@@ -213,6 +213,8 @@ def main(args):
                         configs_to_save[final_name].append(losses_dict_weighted_eval[k].item())                
 
                 cur_delta = loss_eval.item() - best_loss
+                print(f"epoch: {epoch}: total loss: {loss_eval.item()}, lr: {optimizer.scheduler.get_lr()},",
+                      f"motion weight: {args.motion_reg_ratio}, center_weight: {center_weight}")
                 if abs(cur_delta) > min_delta:
                     if cur_delta < 0:
                         best_loss = loss_eval.item()
