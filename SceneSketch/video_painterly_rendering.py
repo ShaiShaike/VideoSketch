@@ -181,16 +181,20 @@ def main(args):
 
             with torch.no_grad():
                 #Todo: evaluate by last frame or by first, middle last
-                renderer.load_clip_attentions_and_mask(args.end_frame)
-                inputs = renderer.get_target(args.end_frame)
-                if 'centerloss' in args.center_method:
-                    sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
-                else:
-                    sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
-                losses_dict_weighted_eval, losses_dict_norm_eval, losses_dict_original_eval = loss_func(sketches, inputs, counter, renderer.get_widths(), renderer=renderer, mode="eval", width_opt=renderer.width_optim)
-                motion_regularization_eval = motions[:, 1:] - motions[:, :-1]
-                motion_regularization_eval = motion_regularization_eval * motion_regularization_eval
-                loss_eval = sum(list(losses_dict_weighted_eval.values())) #+ args.motion_reg_ratio * sum(motion_regularization_eval)
+                loss_eval = 0.0
+                detail_loss = []
+                for eval_frame in [args.start_frame, args.center_frame, args.end_frame]:
+                    renderer.load_clip_attentions_and_mask(args.end_frame)
+                    inputs = renderer.get_target(args.end_frame)
+                    if 'centerloss' in args.center_method:
+                        sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+                    else:
+                        sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
+                    losses_dict_weighted_eval, losses_dict_norm_eval, losses_dict_original_eval = loss_func(sketches, inputs, counter, renderer.get_widths(), renderer=renderer, mode="eval", width_opt=renderer.width_optim)
+                    # motion_regularization_eval = motions[:, 1:] - motions[:, :-1]
+                    # motion_regularization_eval = motion_regularization_eval * motion_regularization_eval
+                    detail_loss.append(sum(list(losses_dict_weighted_eval.values())))
+                    loss_eval += sum(list(losses_dict_weighted_eval.values())) #+ args.motion_reg_ratio * sum(motion_regularization_eval)
                 configs_to_save["loss_eval"].append(loss_eval.item())
                 if "num_strokes" not in configs_to_save.keys():
                     configs_to_save["num_strokes"] = []
@@ -210,7 +214,7 @@ def main(args):
                         configs_to_save[final_name].append(losses_dict_weighted_eval[k].item())                
 
                 cur_delta = loss_eval.item() - best_loss
-                print(f"epoch: {epoch}: total loss: {loss_eval.item()}, lr: {optimizer.scheduler.get_lr()},",
+                print(f"epoch: {epoch}: total loss: {loss_eval.item()} ({detail_loss}), lr: {optimizer.scheduler.get_lr()},",
                       f"motion weight: {args.motion_reg_ratio}, center_weight: {center_weight}")
                 if abs(cur_delta) > min_delta:
                     if cur_delta < 0:
