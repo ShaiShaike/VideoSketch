@@ -184,8 +184,8 @@ def main(args):
                 loss_eval = 0.0
                 detail_loss = []
                 for eval_frame in [args.start_frame, args.center_frame, args.end_frame]:
-                    renderer.load_clip_attentions_and_mask(args.eval_frame)
-                    inputs = renderer.get_target(args.eval_frame)
+                    renderer.load_clip_attentions_and_mask(eval_frame)
+                    inputs = renderer.get_target(eval_frame)
                     if 'centerloss' in args.center_method:
                         sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
                     else:
