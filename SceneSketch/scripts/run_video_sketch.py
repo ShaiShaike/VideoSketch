@@ -30,6 +30,7 @@ parser.add_argument("--center_frame", type=int, default=-1)
 parser.add_argument("--center_method", type=str, default='none')
 parser.add_argument("--motion_reg_ratio", type=float, default=0.)
 parser.add_argument("--center_interval_ratio", type=float, default=1.5)
+parser.add_argument("-scheduler", action='store_true')
 parser.add_argument("--pre_resize", type=int, default=0)
 parser.add_argument("--center_crop", type=int, default=0)
 parser.add_argument("--output_pref", type=str, default="for_arik",
@@ -192,7 +193,8 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--ratio_loss", str(args.ratio_loss),
                             "--resize_obj", str(args.resize_obj),
                             "--eval_interval", str(args.eval_interval),
-                            "--min_eval_iter", str(args.min_eval_iter)])
+                            "--min_eval_iter", str(args.min_eval_iter)]
+                            + [elem for elem in ["-scheduler"] if args.scheduler])
     
     if exit_code.returncode:
         sys.exit(1)

@@ -699,6 +699,8 @@ class PainterOptimizer:
         self.mlp_width_weights_path = args.mlp_width_weights_path
         self.mlp_points_weights_path = args.mlp_points_weights_path
         self.load_points_opt_weights = args.load_points_opt_weights
+        self.do_scheduler = args.scheduler
+        self.num_iters = args.num_iter
         # self.only_width = args.only_width
 
     def turn_off_points_optim(self):
@@ -725,13 +727,16 @@ class PainterOptimizer:
                 checkpoint = torch.load(self.mlp_points_weights_path)
                 self.points_optim.load_state_dict(checkpoint['optimizer_state_dict'])
                 print("optimizer checkpoint loaded from ", self.mlp_points_weights_path)
+            if self.do_scheduler:
+                self.scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                    self.points_optim, max_lr=5*self.points_lr, total_steps=self.num_iters)
         
         if self.optim_color:
             self.color_optim = torch.optim.Adam(self.renderer.set_color_parameters(), lr=self.color_lr)
             
 
     def update_lr(self, counter):
-        if self.optimize_points:
+        if not self.do_scheduler and self.optimize_points:
             new_lr = utils.get_epoch_lr(counter, self.args)
             for param_group in self.points_optim.param_groups:
                 param_group["lr"] = new_lr
@@ -746,7 +751,10 @@ class PainterOptimizer:
     
     def step_(self):
         if self.optimize_points:
-            self.points_optim.step()
+            if self.do_scheduler:
+                self.scheduler.step()
+            else:
+                self.points_optim.step()
         if self.width_optim:
             self.width_optimizer.step()
         if self.optim_color:
