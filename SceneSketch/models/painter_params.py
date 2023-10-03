@@ -730,7 +730,7 @@ class PainterOptimizer:
             if self.do_scheduler:
                 self.scheduler = torch.optim.lr_scheduler.OneCycleLR(
                     self.points_optim, max_lr=self.points_lr, total_steps=self.num_iters,
-                    div_factor=10.0, final_div_factor=100.0)
+                    div_factor=5.0, final_div_factor=10.0)
         
         if self.optim_color:
             self.color_optim = torch.optim.Adam(self.renderer.set_color_parameters(), lr=self.color_lr)
@@ -752,10 +752,9 @@ class PainterOptimizer:
     
     def step_(self):
         if self.optimize_points:
+            self.points_optim.step()
             if self.do_scheduler:
                 self.scheduler.step()
-            else:
-                self.points_optim.step()
         if self.width_optim:
             self.width_optimizer.step()
         if self.optim_color:
