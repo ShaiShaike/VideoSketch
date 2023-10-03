@@ -111,7 +111,6 @@ def main(args):
         renderer.load_clip_attentions_and_mask(args.center_frame)
         center_inputs = renderer.get_target(args.center_frame).detach()
         center_mask = renderer.mask
-    print('1:', args.center_method, 'centerloss' in args.center_method)
     with torch.no_grad():
         if 'centerloss' in args.center_method:
             init_sketches, init_motions, _ = (tensor.to(args.device) for tensor in renderer.get_image("init"))
@@ -140,8 +139,6 @@ def main(args):
         inputs = renderer.get_target(batch_frame_indexes)
         if 'centerloss' in args.center_method:
             sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
-            print("sketches", sketches.size(), "center_sketches", center_sketches.size())
-            print("inputs", inputs.size(), "center_inputs", center_inputs.size())
             center_losses_dict_weighted, _, _ = loss_func(
                 center_sketches, center_inputs, counter, renderer.get_widths(), renderer, optimizer,
                 mode="train", width_opt=renderer.width_optim, mask=center_mask)
