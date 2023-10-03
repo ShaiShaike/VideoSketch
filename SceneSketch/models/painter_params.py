@@ -699,6 +699,7 @@ class PainterOptimizer:
         self.mlp_points_weights_path = args.mlp_points_weights_path
         self.load_points_opt_weights = args.load_points_opt_weights
         self.do_scheduler = args.scheduler
+        print("self.do_scheduler:", self.do_scheduler)
         self.num_iters = args.num_iter
         # self.only_width = args.only_width
 
