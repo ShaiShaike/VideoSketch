@@ -293,6 +293,8 @@ def parse_video_arguments():
     parser.add_argument("--clip_conv_loss_type", type=str, default="L2")
     parser.add_argument("--clip_conv_layer_weights",
                         type=str, default="0,0,1.0,1.0,0")
+    parser.add_argument("--center_clip_weights",
+                        type=str, default="0,0,1.0,1.0,0")
     parser.add_argument("--clip_model_name", type=str, default="RN101")
     parser.add_argument("--clip_fc_loss_weight", type=float, default=0.1)
     parser.add_argument("--clip_text_guide", type=float, default=0)

@@ -618,7 +618,7 @@ class CLIPConvLoss(torch.nn.Module):
         self.clip_fc_loss_weight = args.clip_fc_loss_weight
         self.counter = 0
 
-    def forward(self, sketch, target, mode="train", mask=None):
+    def forward(self, sketch, target, mode="train", mask=None, clip_conv_layer_weights=None):
         """
         Parameters
         ----------
@@ -626,6 +626,9 @@ class CLIPConvLoss(torch.nn.Module):
         target: Torch Tensor [1, C, H, W]
         """
         #         y = self.target_transform(target).to(self.args.device)
+        clip_conv_layer_weights = self.args.clip_conv_layer_weights \
+            if clip_conv_layer_weights is None else clip_conv_layer_weights
+        
         conv_loss_dict = {}
         if self.apply_mask:
             sketch *= mask
@@ -660,7 +663,7 @@ class CLIPConvLoss(torch.nn.Module):
         conv_loss = self.distance_metrics[self.clip_conv_loss_type](
             xs_conv_features, ys_conv_features, self.clip_model_name)
 
-        for layer, w in enumerate(self.args.clip_conv_layer_weights):
+        for layer, w in enumerate(clip_conv_layer_weights):
             if w:
                 conv_loss_dict[f"clip_{self.loss_log_name}_l{layer}"] = conv_loss[layer]
             if layer == 11 and self.l11_norm:
@@ -763,13 +766,16 @@ class CLIPmaskLoss(torch.nn.Module):
         self.clip_fc_loss_weight = 0
         self.counter = 0
 
-    def forward(self, sketch, target, mode="train", mask=None):
+    def forward(self, sketch, target, mode="train", mask=None, clip_conv_layer_weights=None):
         """
         Parameters
         ----------
         sketch: Torch Tensor [1, C, H, W]
         target: Torch Tensor [1, C, H, W]
         """
+        clip_conv_layer_weights = self.clip_conv_layer_weights \
+            if clip_conv_layer_weights is None else clip_conv_layer_weights
+
         conv_loss_dict = {}
         
         x = sketch.to(self.device)
@@ -799,7 +805,7 @@ class CLIPmaskLoss(torch.nn.Module):
         ys_fc_features, ys_conv_features = self.visual_encoder(ys_back, masks, mode=mode)
         conv_loss = self.distance_metrics[self.clip_conv_loss_type](
             xs_conv_features, ys_conv_features, self.clip_model_name)
-        for layer, w in enumerate(self.clip_conv_layer_weights):
+        for layer, w in enumerate(clip_conv_layer_weights):
             if w:
                 conv_loss_dict[f"clip_vit_l{layer}"] = conv_loss[layer] * w
         

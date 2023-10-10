@@ -57,6 +57,7 @@ parser.add_argument("--mask_object_attention", type=int, default=0,
 
 parser.add_argument("--clip_fc_loss_weight", type=str, default="0")
 parser.add_argument("--clip_conv_layer_weights", type=str, default="0,0,1.0,1.0,0")
+parser.add_argument("--center_clip_weights", type=str, default="0,0,1.0,1.0,0")
 parser.add_argument("--clip_conv_loss_type", type=str, default="L2")
 
 parser.add_argument("--clip_model_name", type=str, default="ViT-B/32")
@@ -167,6 +168,7 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--wandb_project_name", str(args.wandb_project_name),
                             "--clip_fc_loss_weight", args.clip_fc_loss_weight,
                             "--clip_conv_layer_weights", args.clip_conv_layer_weights,
+                            "--center_clip_weights", args.center_clip_weights,
                             "--clip_model_name", args.clip_model_name,
                             "--loss_mask", str(args.loss_mask),
                             "--clip_conv_loss", str(args.clip_conv_loss),
