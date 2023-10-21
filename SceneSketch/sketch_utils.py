@@ -21,7 +21,7 @@ from skimage.transform import resize
 import PIL
 from skimage import morphology
 from skimage.measure import label 
-from models.painter_params import MLP, WidthMLP, MotionMLP
+from models.painter_params import MLP, MLP2, WidthMLP, MotionMLP
 from shutil import copyfile
 import cv2
 from pathlib import Path
@@ -513,7 +513,7 @@ def inference_sketch(args, eps=1e-4):
     pydiffvg.save_svg(f"{output_path}/best_iter.svg", canvas_width, canvas_height, shapes, shape_groups)
 
 
-def inference_video(args, eps=1e-4):
+def inference_video(args, eps=1e-4, is_video=0):
     output_dir = args.output_dir
     mlp_points_weights_path = f"{output_dir}/points_mlp.pt"
     mlp_motion_weights_path = f"{output_dir}/motion_mlp.pt"
@@ -528,7 +528,10 @@ def inference_video(args, eps=1e-4):
     num_control_points = torch.zeros(1, dtype = torch.int32) + (control_points_per_seg - 2)
     init_widths = torch.ones((num_paths)).to(device) * width_
     
-    mlp = MLP(num_strokes=num_paths, num_cp=control_points_per_seg).to(device)
+    if is_video == 2:
+        mlp = MLP2(num_strokes=num_paths, num_cp=control_points_per_seg).to(device)
+    else:
+        mlp = MLP(num_strokes=num_paths, num_cp=control_points_per_seg).to(device)
     checkpoint = torch.load(mlp_points_weights_path)
     mlp.load_state_dict(checkpoint['model_state_dict'])
 
@@ -545,7 +548,10 @@ def inference_video(args, eps=1e-4):
     points_vars = torch.stack(points_vars).unsqueeze(0).to(device)
     points_vars = points_vars / canvas_width
     points_vars = 2 * points_vars - 1
-    points = mlp(points_vars)
+    if is_video == 2:
+        points, time_layer = mlp(points_vars)
+    else:
+        points = mlp(points_vars)
 
     if args.width_optim: #first iter use just the location mlp
         widths_  = mlp_width(init_widths).clamp(min=1e-8)
@@ -577,7 +583,10 @@ def inference_video(args, eps=1e-4):
 
         num_batch = points.shape[0]
         timeframe = torch.ones((num_batch, 1), device=device) * frame_num / slomotion
-        points_and_time = torch.cat([points, timeframe], dim=1)
+        if is_video == 2:
+            points_and_time = torch.cat([time_layer, timeframe], dim=1)
+        else:
+            points_and_time = torch.cat([points, timeframe], dim=1)
         frame_points = motion_mlp(points_and_time)
 
         all_points = 0.5 * (frame_points + 1.0) * canvas_width

@@ -22,7 +22,7 @@ class Painter(torch.nn.Module):
                 device=None,
                 target_im=None,
                 mask=None,
-                is_video=False):
+                is_video=0):
         super(Painter, self).__init__()
 
         self.args = args
@@ -85,7 +85,10 @@ class Painter(torch.nn.Module):
             self.mlp_width_weight_init()
             # self.mlp_width.apply(init_weights)
         self.gumbel_temp = args.gumbel_temp
-        self.mlp = MLP(num_strokes=self.num_paths, num_cp=self.control_points_per_seg, width_optim=self.width_optim).to(device) if self.mlp_train else None
+        if is_video == 2:
+            self.mlp = MLP2(num_strokes=self.num_paths, num_cp=self.control_points_per_seg, width_optim=self.width_optim).to(device) if self.mlp_train else None
+        else:
+            self.mlp = MLP(num_strokes=self.num_paths, num_cp=self.control_points_per_seg, width_optim=self.width_optim).to(device) if self.mlp_train else None
         
         self.is_video = is_video
         if self.is_video:
@@ -215,10 +218,16 @@ class Painter(torch.nn.Module):
             points_vars = points_vars / self.canvas_width
             points_vars = 2 * points_vars - 1
             if self.optimize_points:
-                points = self.mlp(points_vars)
+                if self.is_video == 2:
+                    points, time_layer = self.mlp(points_vars)
+                else:
+                    points = self.mlp(points_vars)
             else:
                 with torch.no_grad():
-                    points = self.mlp(points_vars)
+                    if self.is_video == 2:
+                        points, time_layer = self.mlp(points_vars)
+                    else:
+                        points = self.mlp(points_vars)
             
         else:
             points = torch.stack(self.points_init).unsqueeze(0).to(self.device)
@@ -235,7 +244,10 @@ class Painter(torch.nn.Module):
 
             num_batch = points.shape[0]
             timeframe = torch.ones((num_batch, 1), device=self.device) * self.frame_num
-            points_and_time = torch.cat([points, timeframe], dim=1)
+            if self.is_video == 2:
+                points_and_time = torch.cat([time_layer, timeframe], dim=1)    
+            else:
+                points_and_time = torch.cat([points, timeframe], dim=1)
             points, motions = self.motion_mlp(points_and_time, get_detlas=True)
             motions = motions.reshape((-1, self.num_paths, self.control_points_per_seg, 2))
 
@@ -976,6 +988,30 @@ class MotionMLP(nn.Module):
             return coordinates + 0.1 * deltas, 0.1 * deltas
         else:
             return coordinates + 0.1 * deltas
+
+
+class MLP2(nn.Module):
+    def __init__(self, num_strokes, num_cp, width_optim=False):
+        super().__init__()
+        outdim = 1000
+        self.width_optim = width_optim
+        self.layers_points = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(num_strokes * num_cp * 2, outdim),
+            nn.SELU(inplace=True),
+            nn.Linear(outdim, outdim),
+            nn.SELU(inplace=True),
+        )
+        self.deltas_layer = nn.Linear(outdim, num_strokes * num_cp * 2)
+        self.time_layer = nn.Linear(outdim, num_strokes * num_cp * 2)
+
+
+    def forward(self, x, widths=None):
+        '''Forward pass'''
+        x = self.layers_points(x)
+        deltas = self.deltas_layer(x)
+        time_layer = self.time_layer(x)
+        return x.flatten() + 0.1 * deltas, x.flatten() + 0.1 * time_layer
 
 
 class MotionMLPOld(nn.Module):

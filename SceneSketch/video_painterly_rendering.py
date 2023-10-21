@@ -80,7 +80,7 @@ def main(args):
     # utils.log_input(args.use_wandb, 0, inputs, args.output_dir)
     renderer = load_renderer(args)
     
-    optimizer = PainterOptimizer(args, renderer, is_video=True)
+    optimizer = PainterOptimizer(args, renderer, is_video=args.model_ver)
     counter = 0
     configs_to_save = {"loss_eval": []}
     best_loss, best_fc_loss, best_num_strokes = 100, 100, args.num_paths
@@ -214,7 +214,8 @@ def main(args):
                         configs_to_save[final_name].append(losses_dict_weighted_eval[k].item())                
 
                 cur_delta = loss_eval.item() - best_loss
-                print(f"epoch: {epoch}: total loss: {loss_eval.item()} ({detail_loss}), lr: {optimizer.scheduler.get_lr()},",
+                print(f"epoch: {epoch}: total loss: {loss_eval.item()} ({detail_loss}),",
+                      f"lr: {optimizer.scheduler.get_lr() if 'centerloss' in args.center_method else optimizer.param_groups[0]['lr']},",
                       f"motion weight: {args.motion_reg_ratio}, center_weight: {center_weight}")
                 if abs(cur_delta) > min_delta:
                     if cur_delta < 0:
@@ -276,7 +277,7 @@ def main(args):
                     optimizer.switch_opt()
     if args.width_optim:
         utils.log_best_normalised_sketch(configs_to_save, args.output_dir, args.use_wandb, args.device, args.eval_interval, args.min_eval_iter)
-    utils.inference_video(args)
+    utils.inference_video(args, is_video=args.model_ver)
     return configs_to_save
 
 if __name__ == "__main__":

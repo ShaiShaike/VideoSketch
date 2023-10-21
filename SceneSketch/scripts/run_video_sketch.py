@@ -28,6 +28,7 @@ parser.add_argument("--start_frame", type=int, default=0)
 parser.add_argument("--end_frame", type=int, default=-1)
 parser.add_argument("--center_frame", type=int, default=-1)
 parser.add_argument("--center_method", type=str, default='none')
+parser.add_argument("--model_ver", type=int, default=1)
 parser.add_argument("--motion_reg_ratio", type=float, default=0.)
 parser.add_argument("--center_interval_ratio", type=float, default=1.5)
 parser.add_argument("-scheduler", action='store_true')
@@ -146,6 +147,7 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--end_frame", str(args.end_frame),
                             "--center_frame", str(args.center_frame),
                             "--center_method", str(args.center_method),
+                            "--model_ver", str(args.model_ver),
                             "--motion_reg_ratio", str(args.motion_reg_ratio),
                             "--center_interval_ratio", str(args.center_interval_ratio),
                             "--pre_resize", str(args.pre_resize),
