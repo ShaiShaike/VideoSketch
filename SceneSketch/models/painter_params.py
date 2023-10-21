@@ -1008,9 +1008,9 @@ class MLP2(nn.Module):
 
     def forward(self, x, widths=None):
         '''Forward pass'''
-        x = self.layers_points(x)
-        deltas = self.deltas_layer(x)
-        time_layer = self.time_layer(x)
+        hidden = self.layers_points(x)
+        deltas = self.deltas_layer(hidden)
+        time_layer = self.time_layer(hidden)
         return x.flatten() + 0.1 * deltas, x.flatten() + 0.1 * time_layer
 
 
