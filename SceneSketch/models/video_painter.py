@@ -127,7 +127,9 @@ class VideoPainter(Painter):
     def calc_edges(self, target):
         images = target.cpu().numpy()
         print(images.shape)
-        images = np.transpose(np.transpose(images, (1, 2)), (2, 3))
+        images = np.transpose(images, (1, 2))
+        print(images.shape)
+        images = np.transpose(images, (2, 3))
         edges = np.zeros_like(images)
         for i, image in enumerate(images):
             gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
