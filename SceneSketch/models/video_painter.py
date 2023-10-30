@@ -126,9 +126,9 @@ class VideoPainter(Painter):
     
     def calc_edges(self, target):
         images = target.cpu().numpy()
+        images = np.transpose(np.transpose(images, (1, 2)), (2, 3))
         edges = np.zeros_like(images)
         for i, image in enumerate(images):
-            print(image.shape)
             gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
             edge = cv2.Canny(gray, 100, 200)
             print(f'check canny max: {np.max(edge)}, min: {np.min(edge)}')
@@ -136,7 +136,7 @@ class VideoPainter(Painter):
                 edge = cv2.GaussianBlur(edge, ksize=(self.args.edges_blur, self.args.edges_blur),
                                         sigmaX=0)
             edges[i] = np.clip(edge, 0, 1)
-        return torch.from_numpy(edges)
+        return torch.from_numpy(np.transpose(np.transpose(edges, (3, 2)), (2, 1)))
 
 
     def dino_attn_helper(self, image):
