@@ -134,7 +134,7 @@ class VideoPainter(Painter):
             if self.args.edges_blur:
                 edge = cv2.GaussianBlur(edge, ksize=(self.args.edges_blur, self.args.edges_blur),
                                         sigmaX=0)
-            edges[i] = np.clip(edge, 0, 1)
+            edges[i] = np.clip(edge/255, 0, 1)
         return torch.from_numpy(edges)
 
 
