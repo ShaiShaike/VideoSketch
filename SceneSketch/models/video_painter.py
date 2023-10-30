@@ -126,10 +126,12 @@ class VideoPainter(Painter):
     
     def calc_edges(self, target):
         images = target.cpu().numpy()
-        images = np.transpose(images, (0, 2, 3, 1))
+        images = np.uint8(np.transpose(images, (0, 2, 3, 1)))
         edges = np.zeros_like(images)
         for i, image in enumerate(images):
             gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+            print(gray.shape)
+            print(f'check gray max: {np.max(gray)}, min: {np.min(gray)}')
             edge = cv2.Canny(gray, 100, 200)
             print(f'check canny max: {np.max(edge)}, min: {np.min(edge)}')
             if self.args.edges_blur:
