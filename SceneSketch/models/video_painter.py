@@ -26,7 +26,7 @@ class Timer:
         self.start_timer = time()
 
     def toc(self):
-        self.sum_time += time() - self.start_timer()
+        self.sum_time += time() - self.start_timer
         self.amount += 1
         self.start_timer = None
     
