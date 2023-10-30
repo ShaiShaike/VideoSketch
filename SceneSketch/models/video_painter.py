@@ -50,7 +50,7 @@ class VideoPainter(Painter):
         self.prep_timer = Timer()
         self.prep_video_inputs(args)
         print('prep time:', self.prep_timer)
-        return
+        
 
         self.base_frame = (args.start_frame + args.end_frame) // 2 if args.center_frame < 0 else args.center_frame
         self.load_clip_attentions_and_mask(self.base_frame)
@@ -134,7 +134,7 @@ class VideoPainter(Painter):
             if self.args.edges_blur:
                 edge = cv2.GaussianBlur(edge, ksize=(self.args.edges_blur, self.args.edges_blur),
                                         sigmaX=0)
-            edges[i] = np.clip(edge/255, 0, 1)
+            edges[i] = np.clip(edge/255 * 2, 0, 1)
         return torch.from_numpy(edges)
 
 

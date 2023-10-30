@@ -79,7 +79,7 @@ def main(args):
     loss_func = Loss(args)
     # utils.log_input(args.use_wandb, 0, inputs, args.output_dir)
     renderer = load_renderer(args)
-    return
+    
     optimizer = PainterOptimizer(args, renderer, is_video=True)
     counter = 0
     configs_to_save = {"loss_eval": []}
