@@ -126,6 +126,7 @@ class VideoPainter(Painter):
     
     def calc_edges(self, target):
         images = target.cpu().numpy()
+        print(images.shape)
         images = np.transpose(np.transpose(images, (1, 2)), (2, 3))
         edges = np.zeros_like(images)
         for i, image in enumerate(images):
