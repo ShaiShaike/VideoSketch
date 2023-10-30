@@ -128,6 +128,7 @@ class VideoPainter(Painter):
         images = target.cpu().numpy()
         edges = np.zeros_like(images)
         for i, image in enumerate(images):
+            print(image.shape)
             gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
             edge = cv2.Canny(gray, 100, 200)
             print(f'check canny max: {np.max(edge)}, min: {np.min(edge)}')
