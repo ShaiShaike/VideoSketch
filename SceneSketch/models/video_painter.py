@@ -3,6 +3,7 @@ from PIL import Image
 import numpy as np
 from pathlib import Path
 from tqdm import tqdm
+from time import time
 from os import makedirs
 import CLIP_.clip as clip
 from torchvision import transforms
@@ -13,6 +14,25 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.painter_params import Painter
+
+
+class Timer:
+    def __init__(self) -> None:
+        self.sum_time = 0
+        self.amount = 0
+        self.start_timer = None
+    
+    def tic(self):
+        self.start_timer = time()
+
+    def toc(self):
+        self.sum_time += time() - self.start_timer()
+        self.amount += 1
+        self.start_timer = None
+    
+    def __repr__(self) -> str:
+        return f'total time: {self.sum_time :.1f}sec, avarege time: {self.sum_time / self.amount :.1f}sec'
+
 
 
 class VideoPainter(Painter):
@@ -27,7 +47,10 @@ class VideoPainter(Painter):
         else:
             self.reverse_mask = False
         
+        self.prep_timer = Timer()
         self.prep_video_inputs(args)
+        print('prep time:', self.prep_timer)
+        return
 
         self.base_frame = (args.start_frame + args.end_frame) // 2 if args.center_frame < 0 else args.center_frame
         self.load_clip_attentions_and_mask(self.base_frame)
@@ -50,6 +73,11 @@ class VideoPainter(Painter):
             self.attention_map = np.load(str(self.workdir / f"attention_map_{self.base_frame}.npy"))
         else:
             self.attention_map = None
+    
+    def get_edges(self, frame_index):
+        edges_path = self.workdir / f"edges_{frame_index}.t"
+        assert edges_path.exists(), f"{str(edges_path)} does not exists"
+        return torch.load(str(edges_path)).to(self.device)
 
     def get_target(self, frame_index):
         target_path = self.workdir / f"frame_{frame_index}.t"
@@ -73,11 +101,14 @@ class VideoPainter(Painter):
         is_first = True
         end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
         for frame_index in range(args.start_frame, end_frame):
-            
+            self.prep_timer.tic()
             target, mask = self.process_image(image, args, crop, is_first)
+            edges = self.calc_edges(target)
             is_first = False
-            torch.save(target, str(self.workdir / f"frame_{frame_index}.t"))
+            torch.save(target, str(self.workdir / f"edges_{frame_index}.t"))
             torch.save(mask, str(self.workdir / f"mask_{frame_index}.t"))
+            torch.save(edges, str(self.workdir / f"frame_{frame_index}.t"))
+            Image.fromarray(np.int8(edges.numpy() * 255)).save(str(self.workdir / f"edges_{frame_index}.png"))
             
             clip_attentions = self.clip_it(target)
             print('saving...', str(self.workdir / f"clip_attentions_{frame_index}.t"))
@@ -91,7 +122,20 @@ class VideoPainter(Painter):
                 self.attention_map = None
             
             success, image = cap.read()
+            self.prep_timer.toc()
     
+    def calc_edges(self, target):
+        image = target.numpy()
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        edges = cv2.Canny(gray, 100, 200)
+        print(f'check canny max: {np.max(edges)}, min: {np.min(edges)}')
+        if self.args.edges_blur:
+            edges = cv2.GaussianBlur(edges, ksize=(self.args.edges_blur, self.args.edges_blur),
+                                     sigmaX=0)
+        edges = np.clip(edges, 0, 1)
+        return torch.from_numpy(edges)
+
+
     def dino_attn_helper(self, image):
         patch_size=8 # dino hyperparameter
         totens = transforms.Compose([

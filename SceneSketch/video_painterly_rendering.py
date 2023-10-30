@@ -79,7 +79,7 @@ def main(args):
     loss_func = Loss(args)
     # utils.log_input(args.use_wandb, 0, inputs, args.output_dir)
     renderer = load_renderer(args)
-    
+    return
     optimizer = PainterOptimizer(args, renderer, is_video=True)
     counter = 0
     configs_to_save = {"loss_eval": []}
@@ -154,6 +154,11 @@ def main(args):
         loss = sum(list(losses_dict_weighted.values())) + args.motion_reg_ratio * torch.sum(motion_regularization)
         if 'centerloss' in args.center_method:
             loss += center_weight * sum(list(center_losses_dict_weighted.values()))
+        if 'edgeloss' in args.center_method:
+            edges = renderer.get_edges(batch_frame_indexes)
+            edgeloss = torch.sum(inputs * edges) / torch.sum(inputs)
+            loss += edgeloss
+
         loss.backward()
         optimizer.step_()
 
