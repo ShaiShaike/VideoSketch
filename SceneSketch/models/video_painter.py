@@ -104,12 +104,12 @@ class VideoPainter(Painter):
             self.prep_timer.tic()
             target, mask = self.process_image(image, args, crop, is_first)
             edges = self.calc_edges(target)
-            print(edges.shape)
             is_first = False
             torch.save(target, str(self.workdir / f"edges_{frame_index}.t"))
             torch.save(mask, str(self.workdir / f"mask_{frame_index}.t"))
             torch.save(edges, str(self.workdir / f"frame_{frame_index}.t"))
-            Image.fromarray(np.uint8(edges[0].numpy() * 255)).save(str(self.workdir / f"edges_{frame_index}.png"))
+            os.makedirs('VideoSketch/SceneSketch/results_sketches/pekinex/runs/object_l4_pekinez//object_l4_pekinez_seed1000/', exist_ok=True)
+            Image.fromarray(np.uint8(edges[0].numpy() * 255)).save(f"VideoSketch/SceneSketch/results_sketches/pekinex/runs/object_l4_pekinez//object_l4_pekinez_seed1000/edges_{frame_index}.png"))
             
             clip_attentions = self.clip_it(target)
             print('saving...', str(self.workdir / f"clip_attentions_{frame_index}.t"))
@@ -129,17 +129,13 @@ class VideoPainter(Painter):
         images = target.cpu().numpy()
         images = np.uint8(255 * np.transpose(images, (0, 2, 3, 1)))
         edges = np.zeros(images.shape[:-1])
-        print(edges.shape)
         for i, image in enumerate(images):
             gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
             edge = cv2.Canny(gray, 100, 200)
-            print(edge.shape)
             if self.args.edges_blur:
                 edge = cv2.GaussianBlur(edge, ksize=(self.args.edges_blur, self.args.edges_blur),
                                         sigmaX=0)
-            print(edge.shape)
             edges[i] = np.clip(edge, 0, 1)
-        print(edges.shape)
         return torch.from_numpy(edges)
 
 
