@@ -109,7 +109,7 @@ class VideoPainter(Painter):
             torch.save(mask, str(self.workdir / f"mask_{frame_index}.t"))
             torch.save(edges, str(self.workdir / f"frame_{frame_index}.t"))
             os.makedirs('VideoSketch/SceneSketch/results_sketches/pekinex/runs/object_l4_pekinez//object_l4_pekinez_seed1000/', exist_ok=True)
-            Image.fromarray(np.uint8(edges[0].numpy() * 255)).save(f"VideoSketch/SceneSketch/results_sketches/pekinex/runs/object_l4_pekinez//object_l4_pekinez_seed1000/edges_{frame_index}.png"))
+            Image.fromarray(np.uint8(edges[0].numpy() * 255)).save(f"VideoSketch/SceneSketch/results_sketches/pekinex/runs/object_l4_pekinez//object_l4_pekinez_seed1000/edges_{frame_index}.png")
             
             clip_attentions = self.clip_it(target)
             print('saving...', str(self.workdir / f"clip_attentions_{frame_index}.t"))
