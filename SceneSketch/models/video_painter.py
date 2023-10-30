@@ -125,14 +125,16 @@ class VideoPainter(Painter):
             self.prep_timer.toc()
     
     def calc_edges(self, target):
-        image = target.cpu().numpy()
-        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-        edges = cv2.Canny(gray, 100, 200)
-        print(f'check canny max: {np.max(edges)}, min: {np.min(edges)}')
-        if self.args.edges_blur:
-            edges = cv2.GaussianBlur(edges, ksize=(self.args.edges_blur, self.args.edges_blur),
-                                     sigmaX=0)
-        edges = np.clip(edges, 0, 1)
+        images = target.cpu().numpy()
+        edges = np.zeros_like(images)
+        for i, image in enumerate(images):
+            gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+            edge = cv2.Canny(gray, 100, 200)
+            print(f'check canny max: {np.max(edge)}, min: {np.min(edge)}')
+            if self.args.edges_blur:
+                edge = cv2.GaussianBlur(edge, ksize=(self.args.edges_blur, self.args.edges_blur),
+                                        sigmaX=0)
+            edges[i] = np.clip(edge, 0, 1)
         return torch.from_numpy(edges)
 
 
