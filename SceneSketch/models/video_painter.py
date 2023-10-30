@@ -125,7 +125,7 @@ class VideoPainter(Painter):
             self.prep_timer.toc()
     
     def calc_edges(self, target):
-        image = target.numpy()
+        image = target.cpu().numpy()
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         edges = cv2.Canny(gray, 100, 200)
         print(f'check canny max: {np.max(edges)}, min: {np.min(edges)}')
