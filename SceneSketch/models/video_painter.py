@@ -104,11 +104,12 @@ class VideoPainter(Painter):
             self.prep_timer.tic()
             target, mask = self.process_image(image, args, crop, is_first)
             edges = self.calc_edges(target)
+            print(edges.shape)
             is_first = False
             torch.save(target, str(self.workdir / f"edges_{frame_index}.t"))
             torch.save(mask, str(self.workdir / f"mask_{frame_index}.t"))
             torch.save(edges, str(self.workdir / f"frame_{frame_index}.t"))
-            Image.fromarray(np.uint8(edges.numpy() * 255)).save(str(self.workdir / f"edges_{frame_index}.png"))
+            Image.fromarray(np.uint8(edges[0].numpy() * 255)).save(str(self.workdir / f"edges_{frame_index}.png"))
             
             clip_attentions = self.clip_it(target)
             print('saving...', str(self.workdir / f"clip_attentions_{frame_index}.t"))
