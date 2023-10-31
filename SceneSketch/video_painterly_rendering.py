@@ -137,11 +137,8 @@ def main(args):
         optimizer.zero_grad_()
         renderer.load_clip_attentions_and_mask(batch_frame_indexes)
         inputs = renderer.get_target(batch_frame_indexes)
-        print('inputs', inputs.size())
         if 'centerloss' in args.center_method:
             sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
-            print('sketches', sketches.size())
-            print('center_sketches', center_sketches.size())
             center_losses_dict_weighted, _, _ = loss_func(
                 center_sketches, center_inputs, counter, renderer.get_widths(), renderer, optimizer,
                 mode="train", width_opt=renderer.width_optim, mask=center_mask)
