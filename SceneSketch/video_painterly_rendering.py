@@ -159,8 +159,12 @@ def main(args):
             loss += center_weight * sum(list(center_losses_dict_weighted.values()))
         if 'edgeloss' in args.center_method:
             edges = renderer.get_edges(batch_frame_indexes)
-            edgeloss = torch.sum(sketches * (1 - edges)) / torch.sum(sketches)
-            loss += edgeloss
+            edgeloss = torch.sum(sketches * (1 - edges)) / torch.sum(sketches) / 1000
+            if epoch < args.num_iter / 3:
+                edge_weight = 10 ** (-1 + epoch * 3 / args.num_iter)
+            else:
+                edge_weight = 10 ** (- 2 * (epoch - args.num_iter / 3) * 2 / args.num_iter)
+            loss += edge_weight * edgeloss
 
         loss.backward()
         optimizer.step_()
@@ -204,7 +208,7 @@ def main(args):
                     # motion_regularization_eval = motion_regularization_eval * motion_regularization_eval
                     if 'edgeloss' in args.center_method:
                         edges = renderer.get_edges(batch_frame_indexes)
-                        edgeloss += torch.sum(sketches * (1 - edges)) / torch.sum(sketches)
+                        edgeloss += torch.sum(sketches * (1 - edges)) / torch.sum(sketches) / 1000
                     detail_loss.append(sum(list(losses_dict_weighted_eval.values())))
                     loss_eval += sum(list(losses_dict_weighted_eval.values())) #+ args.motion_reg_ratio * sum(motion_regularization_eval)
                 configs_to_save["loss_eval"].append(loss_eval.item())
@@ -226,7 +230,8 @@ def main(args):
                         configs_to_save[final_name].append(losses_dict_weighted_eval[k].item())                
 
                 cur_delta = loss_eval.item() - best_loss
-                print(f"epoch: {epoch}: total loss: {loss_eval.item()} ({detail_loss}),", f"edgeloss: {edgeloss}",
+                print(f"epoch: {epoch}: total loss: {loss_eval.item()} ({detail_loss}),",
+                      f"edgeloss: {edgeloss}", f"edge_weight: {edge_weight}",
                       f"lr: {optimizer.scheduler.get_lr() if 'centerloss' in args.center_method else optimizer.param_groups[0]['lr']},",
                       f"motion weight: {args.motion_reg_ratio}, center_weight: {center_weight}")
                 if abs(cur_delta) > min_delta:
