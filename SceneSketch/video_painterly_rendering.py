@@ -202,6 +202,7 @@ def main(args):
                     if 'edgeloss' in args.center_method:
                         edges = renderer.get_edges(batch_frame_indexes)
                         edgeloss += torch.sum(inputs[0] * (1 - edges)) / torch.sum(inputs)
+                        print('is equal:', not torch.any(torch.not_equal(inputs[0], inputs[1])))
                     detail_loss.append(sum(list(losses_dict_weighted_eval.values())))
                     loss_eval += sum(list(losses_dict_weighted_eval.values())) #+ args.motion_reg_ratio * sum(motion_regularization_eval)
                 configs_to_save["loss_eval"].append(loss_eval.item())
