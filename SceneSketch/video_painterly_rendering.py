@@ -159,7 +159,7 @@ def main(args):
             loss += center_weight * sum(list(center_losses_dict_weighted.values()))
         if 'edgeloss' in args.center_method:
             edges = renderer.get_edges(batch_frame_indexes)
-            edgeloss = torch.sum(sketches * (1 - edges)) / torch.sum(inputs)
+            edgeloss = torch.sum(sketches * (1 - edges)) / torch.sum(sketches)
             loss += edgeloss
 
         loss.backward()
@@ -204,7 +204,7 @@ def main(args):
                     # motion_regularization_eval = motion_regularization_eval * motion_regularization_eval
                     if 'edgeloss' in args.center_method:
                         edges = renderer.get_edges(batch_frame_indexes)
-                        edgeloss += torch.sum(sketches * (1 - edges)) / torch.sum(inputs)
+                        edgeloss += torch.sum(sketches * (1 - edges)) / torch.sum(sketches)
                     detail_loss.append(sum(list(losses_dict_weighted_eval.values())))
                     loss_eval += sum(list(losses_dict_weighted_eval.values())) #+ args.motion_reg_ratio * sum(motion_regularization_eval)
                 configs_to_save["loss_eval"].append(loss_eval.item())
