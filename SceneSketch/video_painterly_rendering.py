@@ -137,8 +137,11 @@ def main(args):
         optimizer.zero_grad_()
         renderer.load_clip_attentions_and_mask(batch_frame_indexes)
         inputs = renderer.get_target(batch_frame_indexes)
+        print('inputs', inputs.size())
         if 'centerloss' in args.center_method:
             sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+            print('sketches', sketches.size())
+            print('center_sketches', center_sketches.size())
             center_losses_dict_weighted, _, _ = loss_func(
                 center_sketches, center_inputs, counter, renderer.get_widths(), renderer, optimizer,
                 mode="train", width_opt=renderer.width_optim, mask=center_mask)
@@ -156,7 +159,7 @@ def main(args):
             loss += center_weight * sum(list(center_losses_dict_weighted.values()))
         if 'edgeloss' in args.center_method:
             edges = renderer.get_edges(batch_frame_indexes)
-            edgeloss = torch.sum(inputs[0] * (1 - edges)) / torch.sum(inputs)
+            edgeloss = torch.sum(sketches * (1 - edges)) / torch.sum(inputs)
             loss += edgeloss
 
         loss.backward()
@@ -201,7 +204,7 @@ def main(args):
                     # motion_regularization_eval = motion_regularization_eval * motion_regularization_eval
                     if 'edgeloss' in args.center_method:
                         edges = renderer.get_edges(batch_frame_indexes)
-                        edgeloss += torch.sum(inputs[0] * (1 - edges)) / torch.sum(inputs)
+                        edgeloss += torch.sum(sketches * (1 - edges)) / torch.sum(inputs)
                         print('is equal:', not torch.any(torch.not_equal(inputs[0], inputs[1])))
                     detail_loss.append(sum(list(losses_dict_weighted_eval.values())))
                     loss_eval += sum(list(losses_dict_weighted_eval.values())) #+ args.motion_reg_ratio * sum(motion_regularization_eval)
