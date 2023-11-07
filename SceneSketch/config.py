@@ -187,6 +187,7 @@ def parse_video_arguments():
     parser.add_argument("--motion_reg_ratio", type=float, default=0.)
     parser.add_argument("--center_interval_ratio", type=float, default=1.5)
     parser.add_argument("-scheduler", action='store_true')
+    parser.add_argument("--num_pos_encoding", type=int, default=0)
     parser.add_argument("--output_dir", type=str,
                         help="directory to save the output images and loss")
     parser.add_argument("--path_svg", type=str, default="none",

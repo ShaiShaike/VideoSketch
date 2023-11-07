@@ -33,6 +33,7 @@ parser.add_argument("--model_ver", type=int, default=1)
 parser.add_argument("--motion_reg_ratio", type=float, default=0.)
 parser.add_argument("--center_interval_ratio", type=float, default=1.5)
 parser.add_argument("-scheduler", action='store_true')
+parser.add_argument("--num_pos_encoding", type=int, default=0)
 parser.add_argument("--pre_resize", type=int, default=0)
 parser.add_argument("--center_crop", type=int, default=0)
 parser.add_argument("--output_pref", type=str, default="for_arik",
@@ -154,6 +155,7 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--center_interval_ratio", str(args.center_interval_ratio),
                             "--pre_resize", str(args.pre_resize),
                             "--center_crop", str(args.center_crop),
+                            "--num_pos_encoding", str(args.num_pos_encoding),
                             "--num_paths", str(args.num_strokes),
                             "--control_points_per_seg", str(args.control_points_per_seg),
                             "--image_scale", str(args.image_scale),

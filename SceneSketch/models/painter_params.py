@@ -93,7 +93,8 @@ class Painter(torch.nn.Module):
         self.is_video = is_video
         if self.is_video:
             self.frame_num = 0
-            self.motion_mlp = MotionMLP(num_strokes=self.num_paths, num_cp=self.control_points_per_seg).to(device) if self.mlp_train else None
+            self.motion_mlp = MotionMLP(num_strokes=self.num_paths, num_cp=self.control_points_per_seg,
+                                        num_pos_encoding=self.args.num_pos_encoding).to(device) if self.mlp_train else None
         
         self.mlp_points_weights_path = args.mlp_points_weights_path
         self.mlp_points_weight_init()
@@ -958,7 +959,7 @@ class MLP(nn.Module):
 
 
 class MotionMLP(nn.Module):
-    def __init__(self, num_strokes, num_cp):
+    def __init__(self, num_strokes, num_cp, num_pos_encoding=0):
         super().__init__()
         inner_dim = 1000
         self.linear_1 = nn.Linear(num_strokes * num_cp * 2 + 1, inner_dim)
@@ -966,6 +967,9 @@ class MotionMLP(nn.Module):
         self.linear_2 = nn.Linear(inner_dim + 1, inner_dim)
         self.activation_2 = nn.SELU(inplace=True)
         self.linear_3 = nn.Linear(inner_dim + 1, num_strokes * num_cp * 2)
+        self.num_pos_encoding = num_pos_encoding
+        if self.num_pos_encoding:
+            self.encoding_freq = torch.pi / (1 + torch.randperm(100)[:self.num_pos_encoding])
         
 
     def forward(self, x, get_detlas=False):
@@ -973,10 +977,15 @@ class MotionMLP(nn.Module):
         # x should be of dimenthin (num_points, 3) - 3 for coordinates + timeframe
         coordinates = x[:, :-1]
         timeframe = torch.unsqueeze(x[:, -1], dim=1)
+        
+        if self.num_pos_encoding:
+            timeframe = torch.cat([torch.sin(torch.unsqueeze(self.encoding_freq, dim=0) * timeframe),
+                                   torch.cos(torch.unsqueeze(self.encoding_freq, dim=0) * timeframe)],
+                                  dim=1)
 
         deltas = self.linear_1(x)
         deltas = self.activation_1(deltas)
-
+        
         deltas = torch.cat([deltas, timeframe], dim=1)
         deltas = self.linear_2(deltas)
         deltas = self.activation_2(deltas)
