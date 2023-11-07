@@ -76,7 +76,7 @@ def get_target(args):
 
 
 def main(args):
-    torch.seed(args.seed)
+    torch.manual_seed(args.seed)
     loss_func = Loss(args)
     # utils.log_input(args.use_wandb, 0, inputs, args.output_dir)
     renderer = load_renderer(args)
