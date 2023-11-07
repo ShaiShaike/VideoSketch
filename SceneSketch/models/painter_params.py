@@ -962,11 +962,12 @@ class MotionMLP(nn.Module):
     def __init__(self, num_strokes, num_cp, num_pos_encoding=0, device='cpu'):
         super().__init__()
         inner_dim = 1000
-        self.linear_1 = nn.Linear(num_strokes * num_cp * 2 + 1, inner_dim)
+        time_channels = 2 * num_pos_encoding if num_pos_encoding else 1
+        self.linear_1 = nn.Linear(num_strokes * num_cp * 2 + time_channels, inner_dim)
         self.activation_1 = nn.SELU(inplace=True)
-        self.linear_2 = nn.Linear(inner_dim + 1, inner_dim)
+        self.linear_2 = nn.Linear(inner_dim + time_channels, inner_dim)
         self.activation_2 = nn.SELU(inplace=True)
-        self.linear_3 = nn.Linear(inner_dim + 1, num_strokes * num_cp * 2)
+        self.linear_3 = nn.Linear(inner_dim + time_channels, num_strokes * num_cp * 2)
         self.num_pos_encoding = num_pos_encoding
         if self.num_pos_encoding:
             self.encoding_freq = torch.pi / (1 + torch.randperm(100)[:self.num_pos_encoding]).to(device)
@@ -982,7 +983,7 @@ class MotionMLP(nn.Module):
             timeframe = torch.cat([torch.sin(torch.unsqueeze(self.encoding_freq, dim=0) * timeframe),
                                    torch.cos(torch.unsqueeze(self.encoding_freq, dim=0) * timeframe)],
                                   dim=1)
-
+        x = torch.cat([coordinates, timeframe], dim=1)
         deltas = self.linear_1(x)
         deltas = self.activation_1(deltas)
         
