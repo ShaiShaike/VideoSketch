@@ -160,9 +160,9 @@ def main(args):
             edges = renderer.get_edges(batch_frame_indexes)
             edgeloss = torch.sum(sketches * (1 - edges)) / torch.sum(sketches) / 1000
             if epoch < args.num_iter / 3:
-                edge_weight = 10 ** (-1 + epoch * 3 / args.num_iter)
+                edge_weight = 0 # 10 ** (-1 + epoch * 3 / args.num_iter)
             else:
-                edge_weight = 10 ** (- 2 * (epoch - args.num_iter / 3) * 2 / args.num_iter)
+                edge_weight = 1e-2 # 10 ** (- 2 * (epoch - args.num_iter / 3) * 2 / args.num_iter)
             loss += edge_weight * edgeloss
 
         loss.backward()
