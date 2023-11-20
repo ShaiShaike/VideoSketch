@@ -223,7 +223,7 @@ class FlowLoss(torch.nn.Module):
         else:
             input_size = orig_size
 
-        input_t = torch.cat([img1, img2], 1).cuda()
+        input_t = torch.cat([img1, img2], 1).cuda().contiguous()
 
         output = self.model(input_t).data
 
