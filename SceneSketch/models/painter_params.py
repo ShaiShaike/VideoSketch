@@ -343,6 +343,8 @@ class Painter(torch.nn.Module):
         shape_groups = []
         for p in range(self.num_paths):
             for point in range(self.num_control_points):
+                print('points_shape:', all_points[:,p, point].reshape((-1,2)).size())
+                print('points:', all_points[:,p, point].reshape((-1,2)))
                 path = pydiffvg.Circle(radius = torch.tensor(1.0),
                          center = all_points[:,p, point].reshape((-1,2)))
                 if mode == "init":
