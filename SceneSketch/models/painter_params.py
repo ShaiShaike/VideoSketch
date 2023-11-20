@@ -330,7 +330,7 @@ class Painter(torch.nn.Module):
         all_points = all_points.reshape((-1, self.num_paths, self.control_points_per_seg, 2))
         
         all_motions = motions.reshape((-1, self.num_paths, self.control_points_per_seg, 2))
-        colors = torch.ones((all_motions.size(dim=0), self.num_paths, self.control_points_per_seg, 3))
+        colors = torch.ones((all_motions.size(dim=0), self.num_paths, self.control_points_per_seg, 4))
         colors[:, :, :, :2] = all_motions
 
 
