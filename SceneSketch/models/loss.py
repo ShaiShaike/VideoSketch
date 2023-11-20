@@ -210,9 +210,12 @@ class FlowLoss(torch.nn.Module):
         img1 = im1.float().permute(0, 3, 1, 2) / 255.0
         img2 = im2.float().permute(0, 3, 1, 2) / 255.0
         img1, img2, _ = self.centralize(img1, img2)
+        print('img1', img1.size())
+        print('img2', img2.size())
 
         height, width = img1.shape[-2:]
         orig_size = (int(height), int(width))
+        print('orig_size', orig_size)
 
         if height % div_size != 0 or width % div_size != 0:
             input_size = (
@@ -236,7 +239,7 @@ class FlowLoss(torch.nn.Module):
             flow = F.interpolate(flow, size=orig_size, mode='bilinear', align_corners=False)
             flow[:, 0, :, :] *= scale_w
             flow[:, 1, :, :] *= scale_h
-
+        print('flow', flow.size())
         return flow.permute(0, 2, 3, 1)
 
 
