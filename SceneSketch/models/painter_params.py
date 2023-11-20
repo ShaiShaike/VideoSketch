@@ -353,7 +353,7 @@ class Painter(torch.nn.Module):
                 shapes.append(path)
                 path_group = pydiffvg.ShapeGroup(
                     shape_ids=torch.tensor([len(shapes) - 1]),
-                    fill_color=colors[:, p, point])
+                    fill_color=colors[0, p, point])
                 shape_groups.append(path_group)
         
         _render = pydiffvg.RenderFunction.apply
