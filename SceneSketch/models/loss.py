@@ -207,8 +207,8 @@ class FlowLoss(torch.nn.Module):
         div_flow = 20.0
         div_size = 64
         
-        img1 = im1.float().permute(0, 2, 3, 1) / 255.0
-        img2 = im2.float().permute(0, 2, 3, 1) / 255.0
+        img1 = im1.float() / 255.0
+        img2 = im2.float() / 255.0
         img1, img2, _ = self.centralize(img1, img2)
         print('img1', img1.size())
         print('img2', img2.size())
@@ -240,7 +240,7 @@ class FlowLoss(torch.nn.Module):
             flow[:, 0, :, :] *= scale_w
             flow[:, 1, :, :] *= scale_h
         print('flow', flow.size())
-        return flow.permute(0, 2, 3, 1)
+        return flow
 
 
 class CLIPLoss(torch.nn.Module):
