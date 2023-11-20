@@ -114,7 +114,9 @@ def main(args):
         center_inputs = renderer.get_target(args.center_frame).detach()
         center_mask = renderer.mask
     with torch.no_grad():
-        if 'centerloss' in args.center_method:
+        if 'motionloss' in args.center_method:
+            init_sketches, init_motions, _, _ = (tensor.to(args.device) for tensor in renderer.get_image("init"))
+        elif 'centerloss' in args.center_method:
             init_sketches, init_motions, _ = (tensor.to(args.device) for tensor in renderer.get_image("init"))
         else:  
             init_sketches, init_motions = (tensor.to(args.device) for tensor in renderer.get_image("init"))
