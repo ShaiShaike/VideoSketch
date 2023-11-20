@@ -197,9 +197,9 @@ class FlowLoss(torch.nn.Module):
 
     def forward(self, current_image, center_image, motions, mode="train"):
         flow = self.calc_flow(center_image, current_image)
-        print('motions size:', motions.size())
-        is_motion_point = motions[:, :, :, 2]
-        points_flow = motions[:, :, :, :2]
+        print('flow size:', flow.size())
+        is_motion_point = motions[:, :, 2]
+        points_flow = motions[:, :, :2]
         flow_loss = torch.sum(is_motion_point * torch.abs(points_flow - flow)) // torch.sum(is_motion_point)
         return flow_loss
     
