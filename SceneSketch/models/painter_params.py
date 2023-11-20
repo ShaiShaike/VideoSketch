@@ -182,6 +182,8 @@ class Painter(torch.nn.Module):
         if self.mlp_train:
             if self.is_video:
                 if 'centerloss' in self.args.center_method:
+                    if 'motionloss' in self.args.center_method:
+                        img, motions, center_img, motion_image  = self.mlp_pass(mode)
                     img, motions, center_img = self.mlp_pass(mode)
                     center_opacity = center_img[:, :, 3:4]
                     center_img = center_opacity * center_img[:, :, :3] + torch.ones(
@@ -204,6 +206,8 @@ class Painter(torch.nn.Module):
         img = img.permute(0, 3, 1, 2).to(self.device) # NHWC -> NCHW
         if self.is_video:
             if 'centerloss' in self.args.center_method:
+                if 'motionloss' in self.args.center_method:
+                        return img, motions, center_img, motion_image
                 return img, motions, center_img
             return img, motions
         return img
@@ -266,6 +270,9 @@ class Painter(torch.nn.Module):
         self.shape_groups = shape_groups.copy()
         if self.is_video:
             if 'centerloss' in self.args.center_method:
+                if self.is_video and 'motionloss' in self.args.center_method:
+                    motion_image = self.motions2image(points, motions, mode, eps)
+                    return img, motions, center_img, motion_image
                 return img, motions, center_img
             return img, motions
         return img
@@ -314,6 +321,52 @@ class Painter(torch.nn.Module):
                     None,
                     *scene_args)
         return img, shapes, shape_groups
+
+    def motions2image(self, points, motions, mode, eps=1e-4):
+        
+        # normalize back to canvas size [0, 224] and reshape
+        all_points = 0.5 * (points + 1.0) * self.canvas_width
+        all_points = all_points + eps * torch.randn_like(all_points)
+        all_points = all_points.reshape((-1, self.num_paths, self.control_points_per_seg, 2))
+        
+        all_motions = motions.reshape((-1, self.num_paths, self.control_points_per_seg, 2))
+        colors = torch.ones((all_motions.size(dim=0), self.num_paths, self.control_points_per_seg, 3))
+        colors[:, :, :, :2] = all_motions
+
+
+        if self.width_optim_global and not self.width_optim:
+            self.widths = self.widths.detach()
+            # all_points = all_points.detach()
+        
+        # define new primitives to render
+        shapes = []
+        shape_groups = []
+        for p in range(self.num_paths):
+            for point in range(self.num_control_points):
+                path = pydiffvg.Circle(radius = torch.tensor(1.0),
+                         center = all_points[:,p, point])
+                if mode == "init":
+                    # do once at the begining, define a mask for strokes that are outside the canvas
+                    is_in_canvas_ = self.is_in_canvas(self.canvas_width, self.canvas_height, path)
+                    if not is_in_canvas_:
+                        self.out_of_canvas_mask[p] = 0
+                shapes.append(path)
+                path_group = pydiffvg.ShapeGroup(
+                    shape_ids=torch.tensor([len(shapes) - 1]),
+                    fill_color=colors[:, p, point])
+                shape_groups.append(path_group)
+        
+        _render = pydiffvg.RenderFunction.apply
+        scene_args = pydiffvg.RenderFunction.serialize_scene(\
+            self.canvas_width, self.canvas_height, shapes, shape_groups)
+        img = _render(self.canvas_width, # width
+                    self.canvas_height, # height
+                    2,   # num_samples_x
+                    2,   # num_samples_y
+                    0,   # seed
+                    None,
+                    *scene_args)
+        return img
 
     def get_path(self):
         points = []

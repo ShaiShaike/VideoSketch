@@ -186,6 +186,7 @@ def parse_video_arguments():
     parser.add_argument("--model_ver", type=int, default=1)
     parser.add_argument("--motion_reg_ratio", type=float, default=0.)
     parser.add_argument("--center_interval_ratio", type=float, default=1.5)
+    parser.add_argument("--flownet_path", type=str, default='./checkpoints/fastflownet_ft_mix.pth')
     parser.add_argument("-scheduler", action='store_true')
     parser.add_argument("--num_pos_encoding", type=int, default=0)
     parser.add_argument("--output_dir", type=str,

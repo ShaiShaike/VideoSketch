@@ -4,10 +4,13 @@ import collections
 import clip
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import models, transforms
 import sketch_utils
 import math
 import re
+import numpy as np
+from .FastFlowNet import FastFlowNet
 
 
 def compute_grad_norm_losses(losses_dict, model, points_mlp):
@@ -177,6 +180,63 @@ class Loss(nn.Module):
             losses_dict_original_detach[k_] = losses_dict_original[k_].clone().detach()
 
         return losses_dict, losses_dict_copy, losses_dict_original_detach
+
+
+class FlowLoss(torch.nn.Module):
+    def __init__(self, flownet_path):
+        super(FlowLoss, self).__init__()
+
+        self.model = FastFlowNet().cuda().eval()
+        self.model.load_state_dict(torch.load(flownet_path))
+        for param in self.model.parameters(): param.requires_grad = False
+
+    def centralize(self, img1, img2):
+        b, c, h, w = img1.shape
+        rgb_mean = torch.cat([img1, img2], dim=2).view(b, c, -1).mean(2).view(b, c, 1, 1)
+        return img1 - rgb_mean, img2 - rgb_mean, rgb_mean
+
+    def forward(self, current_image, center_image, motions, mode="train"):
+        flow = self.calc_flow(center_image, current_image)
+        is_motion_point = motions[:, :, :, 2]
+        points_flow = motions[:, :, :, :2]
+        flow_loss = torch.sum(is_motion_point * torch.abs(points_flow - flow)) // torch.sum(is_motion_point)
+        return flow_loss
+    
+    def calc_flow(self, im1, im2):
+        div_flow = 20.0
+        div_size = 64
+        
+        img1 = im1.float().permute(0, 3, 1, 2) / 255.0
+        img2 = im2.float().permute(0, 3, 1, 2) / 255.0
+        img1, img2, _ = self.centralize(img1, img2)
+
+        height, width = img1.shape[-2:]
+        orig_size = (int(height), int(width))
+
+        if height % div_size != 0 or width % div_size != 0:
+            input_size = (
+                int(div_size * np.ceil(height / div_size)), 
+                int(div_size * np.ceil(width / div_size))
+            )
+            img1 = F.interpolate(img1, size=input_size, mode='bilinear', align_corners=False)
+            img2 = F.interpolate(img2, size=input_size, mode='bilinear', align_corners=False)
+        else:
+            input_size = orig_size
+
+        input_t = torch.cat([img1, img2], 1).cuda()
+
+        output = self.model(input_t).data
+
+        flow = div_flow * F.interpolate(output, size=input_size, mode='bilinear', align_corners=False)
+
+        if input_size != orig_size:
+            scale_h = orig_size[0] / input_size[0]
+            scale_w = orig_size[1] / input_size[1]
+            flow = F.interpolate(flow, size=orig_size, mode='bilinear', align_corners=False)
+            flow[:, 0, :, :] *= scale_w
+            flow[:, 1, :, :] *= scale_h
+
+        return flow.permute(0, 2, 3, 1)
 
 
 class CLIPLoss(torch.nn.Module):

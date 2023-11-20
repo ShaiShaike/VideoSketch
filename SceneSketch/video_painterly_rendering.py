@@ -26,7 +26,7 @@ from pathlib import Path
 
 import config
 import sketch_utils as utils
-from models.loss import Loss
+from models.loss import Loss, FlowLoss
 from models.painter_params import Painter, PainterOptimizer
 from models.video_painter import VideoPainter
 from IPython.display import display, SVG
@@ -78,6 +78,7 @@ def get_target(args):
 def main(args):
     torch.manual_seed(args.seed)
     loss_func = Loss(args)
+    flowloss_func = FlowLoss(args.flownet_path)
     # utils.log_input(args.use_wandb, 0, inputs, args.output_dir)
     renderer = load_renderer(args)
     
@@ -139,10 +140,15 @@ def main(args):
         renderer.load_clip_attentions_and_mask(batch_frame_indexes)
         inputs = renderer.get_target(batch_frame_indexes)
         if 'centerloss' in args.center_method:
-            sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+            if 'motionloss' in args.center_method:
+                sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image())
+                flowloss = flowloss_func(inputs, center_inputs, motion_image)
+            else:
+                sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
             center_losses_dict_weighted, _, _ = loss_func(
                 center_sketches, center_inputs, counter, renderer.get_widths(), renderer, optimizer,
                 mode="train", width_opt=renderer.width_optim, mask=center_mask)
+
         else:
             sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
         losses_dict_weighted, losses_dict_norm, losses_dict_original = loss_func(
@@ -154,6 +160,7 @@ def main(args):
         center_weight = np.sin(np.pi * epoch / args.num_iter)
         loss = sum(list(losses_dict_weighted.values())) + args.motion_reg_ratio * torch.sum(motion_regularization)
         edge_weight = 0.0
+        motion_weight = 0.0
         if 'centerloss' in args.center_method:
             loss += center_weight * sum(list(center_losses_dict_weighted.values()))
         if 'edgeloss' in args.center_method:
@@ -164,6 +171,9 @@ def main(args):
             else:
                 edge_weight = 1e-2 # 10 ** (- 2 * (epoch - args.num_iter / 3) * 2 / args.num_iter)
             loss += edge_weight * edgeloss
+        if 'motionloss' in args.center_method:
+            edge_weight = 10 ** (-4 + 3 * epoch / args.num_iter)
+            loss += motion_weight * flowloss
 
         loss.backward()
         optimizer.step_()
@@ -195,11 +205,16 @@ def main(args):
                 loss_eval = 0.0
                 detail_loss = []
                 edgeloss = 0.0
+                flowloss = 0.0
                 for eval_frame in [args.start_frame, args.center_frame, args.end_frame]:
                     renderer.load_clip_attentions_and_mask(eval_frame)
                     inputs = renderer.get_target(eval_frame)
                     if 'centerloss' in args.center_method:
-                        sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+                        if 'motionloss' in args.center_method:
+                            sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image())
+                            flowloss += flowloss_func(inputs, center_inputs, motion_image)
+                        else:
+                            sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
                     else:
                         sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
                     losses_dict_weighted_eval, losses_dict_norm_eval, losses_dict_original_eval = loss_func(sketches, inputs, counter, renderer.get_widths(), renderer=renderer, mode="eval", width_opt=renderer.width_optim)
@@ -230,6 +245,7 @@ def main(args):
 
                 cur_delta = loss_eval.item() - best_loss
                 print(f"epoch: {epoch}: total loss: {loss_eval.item()} ({detail_loss}),",
+                      f"flowloss: {flowloss}",
                       f"edgeloss: {edgeloss}", f"edge_weight: {edge_weight}",
                       f"lr: {optimizer.scheduler.get_lr() if 'centerloss' in args.center_method else optimizer.param_groups[0]['lr']},",
                       f"motion weight: {args.motion_reg_ratio}, center_weight: {center_weight}")
