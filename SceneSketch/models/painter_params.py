@@ -184,7 +184,8 @@ class Painter(torch.nn.Module):
                 if 'centerloss' in self.args.center_method:
                     if 'motionloss' in self.args.center_method:
                         img, motions, center_img, motion_image  = self.mlp_pass(mode)
-                    img, motions, center_img = self.mlp_pass(mode)
+                    else:
+                        img, motions, center_img = self.mlp_pass(mode)
                     center_opacity = center_img[:, :, 3:4]
                     center_img = center_opacity * center_img[:, :, :3] + torch.ones(
                         center_img.shape[0], center_img.shape[1], 3, device = self.device) * (1 - center_opacity)
