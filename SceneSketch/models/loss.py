@@ -199,7 +199,6 @@ class FlowLoss(torch.nn.Module):
         flow = self.calc_flow(center_image, current_image).permute(0, 2, 3, 1).squeeze(dim=0)
         is_motion_point = motions[:, :, 2].unsqueeze(dim=-1)
         points_flow = motions[:, :, :2]
-        print('sizes:', 'flow', flow.size(), 'is_motion_point', is_motion_point.size(), 'points_flow', points_flow.size())
         flow_loss = torch.sum(is_motion_point * torch.abs(points_flow - flow)) // torch.sum(is_motion_point)
         return flow_loss
     
@@ -210,12 +209,8 @@ class FlowLoss(torch.nn.Module):
         img1 = im1.float() / 255.0
         img2 = im2.float() / 255.0
         img1, img2, _ = self.centralize(img1, img2)
-        print('img1', img1.size())
-        print('img2', img2.size())
-
         height, width = img1.shape[-2:]
         orig_size = (int(height), int(width))
-        print('orig_size', orig_size)
 
         if height % div_size != 0 or width % div_size != 0:
             input_size = (
@@ -239,7 +234,6 @@ class FlowLoss(torch.nn.Module):
             flow = F.interpolate(flow, size=orig_size, mode='bilinear', align_corners=False)
             flow[:, 0, :, :] *= scale_w
             flow[:, 1, :, :] *= scale_h
-        print('flow', flow.size())
         return flow
 
 
