@@ -220,6 +220,8 @@ class FlowLoss(torch.nn.Module):
                                                    min(0, max(w, x-v)), :]
                     new_image_minus_vu[y, x, :] = np_center[min(0, max(h, y-v)),
                                                    min(0, max(w, x-u)), :]
+            print('new_image:', new_image.shape)
+            print('uv', uv.shape)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}.png', new_image)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_vu.png', new_image_vu)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus.png', new_image_minus)
