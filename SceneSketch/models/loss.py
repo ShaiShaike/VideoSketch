@@ -10,6 +10,7 @@ import sketch_utils
 import math
 import re
 import numpy as np
+import cv2
 from .FastFlowNet import FastFlowNet
 
 
@@ -195,8 +196,38 @@ class FlowLoss(torch.nn.Module):
         rgb_mean = torch.cat([img1, img2], dim=2).view(b, c, -1).mean(2).view(b, c, 1, 1)
         return img1 - rgb_mean, img2 - rgb_mean, rgb_mean
 
-    def forward(self, current_image, center_image, motions, mode="train"):
+    def forward(self, current_image, center_image, motions, mode="train", debug=False, im_name=''):
         flow = self.calc_flow(center_image, current_image).permute(0, 2, 3, 1).squeeze(dim=0)
+        if debug:
+            uv = flow[0].cpu().numpy()
+            us = uv[:,:,0]
+            vs = uv[:,:,1]
+            np_curr = current_image[0].cpu().numpy()
+            np_center = center_image[0].cpu().numpy()
+            h, w = current_image.shape[:2]
+            new_image = np.zeros_like(np_curr)
+            new_image_vu = np.zeros_like(np_curr)
+            new_image_minus = np.zeros_like(np_curr)
+            new_image_minus_vu = np.zeros_like(np_curr)
+            for y in range(h):
+                for x in range(w):
+                    u, v = us[y, x], vs[y, x]
+                    new_image[y, x, :] = np_center[min(0, max(h, y+u)),
+                                                   min(0, max(w, x+v)), :]
+                    new_image_vu[y, x, :] = np_center[min(0, max(h, y+v)),
+                                                   min(0, max(w, x+u)), :]
+                    new_image_minus[y, x, :] = np_center[min(0, max(h, y-u)),
+                                                   min(0, max(w, x-v)), :]
+                    new_image_minus_vu[y, x, :] = np_center[min(0, max(h, y-v)),
+                                                   min(0, max(w, x-u)), :]
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}.png', new_image)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_vu.png', new_image_vu)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus.png', new_image_minus)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus_vu.png', new_image_minus_vu)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_u.png', us)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_v.png', vs)
+
+
         is_motion_point = motions[:, :, 2].unsqueeze(dim=-1)
         points_flow = motions[:, :, :2]
         flow_loss = torch.sum(is_motion_point * torch.abs(points_flow - flow)) / torch.sum(is_motion_point) / flow.size(dim=1)

@@ -125,6 +125,17 @@ def main(args):
     
     center_weight = 0.5
 
+    if 'debug' in args.center_method:
+        for batch_frame_indexes in range(args.start_frame, args.end_frame + 1):
+            if not args.display:
+                epoch_range.refresh()
+            renderer.load_clip_attentions_and_mask(batch_frame_indexes)
+            inputs = renderer.get_target(batch_frame_indexes)
+            sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image())
+            flowloss = flowloss_func(inputs, center_inputs, motion_image, debug=True, im_name=str(batch_frame_indexes))
+
+        return
+
     for epoch in epoch_range:
         # Todo: args.batch_size
         if 'centeriter' in args.center_method:
@@ -137,7 +148,6 @@ def main(args):
         
         if not args.display:
             epoch_range.refresh()
-        start = time.time()
         optimizer.zero_grad_()
         renderer.load_clip_attentions_and_mask(batch_frame_indexes)
         inputs = renderer.get_target(batch_frame_indexes)
