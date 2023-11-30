@@ -226,11 +226,11 @@ class FlowLoss(torch.nn.Module):
             print('maxes:', np.max(np_curr), np.max(np_center), np.max(new_image), np.max(new_image_vu), np.max(new_image_minus), np.max(new_image_minus_vu))
             print('mins:', np.min(np_curr), np.min(np_center), np.min(new_image), np.min(new_image_vu), np.min(new_image_minus), np.min(new_image_minus_vu))
 
-            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}.png', new_image)
-            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_orig.png', np_curr)
-            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_vu.png', new_image_vu)
-            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus.png', new_image_minus)
-            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus_vu.png', new_image_minus_vu)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}.png', new_image * 255)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_orig.png', np_curr * 255)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_vu.png', new_image_vu * 255)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus.png', new_image_minus * 255)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus_vu.png', new_image_minus_vu * 255)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_u.png', us + h//2)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_v.png', vs + w//2)
 
