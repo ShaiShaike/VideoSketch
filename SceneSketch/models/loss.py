@@ -200,15 +200,15 @@ class FlowLoss(torch.nn.Module):
         flow = self.calc_flow(center_image, current_image).permute(0, 2, 3, 1).squeeze(dim=0)
         if debug:
             uv = flow[0].cpu().numpy()
-            us = uv[:,:,0]
-            vs = uv[:,:,1]
+            us = np.round(uv[:,:,0]).astype(int)
+            vs = np.round(uv[:,:,1]).astype(int)
             np_curr = current_image[0].cpu().numpy()
             np_center = center_image[0].cpu().numpy()
             h, w = current_image.shape[:2]
-            new_image = np.zeros_like(np_curr)
-            new_image_vu = np.zeros_like(np_curr)
-            new_image_minus = np.zeros_like(np_curr)
-            new_image_minus_vu = np.zeros_like(np_curr)
+            new_image = np.zeros_like(np_curr, dtype=np.uint8)
+            new_image_vu = np.zeros_like(np_curr, dtype=np.uint8)
+            new_image_minus = np.zeros_like(np_curr, dtype=np.uint8)
+            new_image_minus_vu = np.zeros_like(np_curr, dtype=np.uint8)
             for y in range(h):
                 for x in range(w):
                     u, v = us[y, x], vs[y, x]
@@ -224,8 +224,8 @@ class FlowLoss(torch.nn.Module):
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_vu.png', new_image_vu)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus.png', new_image_minus)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus_vu.png', new_image_minus_vu)
-            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_u.png', us)
-            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_v.png', vs)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_u.png', us + h//2)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_v.png', vs + w//2)
 
 
         is_motion_point = motions[:, :, 2].unsqueeze(dim=-1)
