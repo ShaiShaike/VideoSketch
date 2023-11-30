@@ -202,8 +202,8 @@ class FlowLoss(torch.nn.Module):
             uv = flow.cpu().numpy()
             us = np.round(uv[:,:,0]).astype(int)
             vs = np.round(uv[:,:,1]).astype(int)
-            np_curr = current_image[0].cpu().numpy()
-            np_center = center_image[0].cpu().numpy()
+            np_curr = current_image[0].permute(1, 2, 0).cpu().numpy()
+            np_center = center_image[0].permute(1, 2, 0).cpu().numpy()
             h, w = current_image.shape[:2]
             new_image = np.zeros_like(np_curr, dtype=np.uint8)
             new_image_vu = np.zeros_like(np_curr, dtype=np.uint8)
@@ -222,6 +222,7 @@ class FlowLoss(torch.nn.Module):
                                                    min(0, max(w, x-u)), :]
             print('new_image:', new_image.shape)
             print('uv', uv.shape)
+            print('np_center:', np_center.shape)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}.png', new_image)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_vu.png', new_image_vu)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus.png', new_image_minus)
