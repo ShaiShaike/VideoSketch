@@ -223,8 +223,8 @@ class FlowLoss(torch.nn.Module):
             print('new_image:', new_image.shape)
             print('uv', uv.shape)
             print('np_center:', np_center.shape)
-            print('maxes:', max(np_curr), max(np_center), max(new_image), max(new_image_vu), max(new_image_minus), max(new_image_minus_vu))
-            print('mins:', min(np_curr), min(np_center), min(new_image), min(new_image_vu), min(new_image_minus), min(new_image_minus_vu))
+            print('maxes:', np.max(np_curr), np.max(np_center), np.max(new_image), np.max(new_image_vu), np.max(new_image_minus), np.max(new_image_minus_vu))
+            print('mins:', np.min(np_curr), np.min(np_center), np.min(new_image), np.min(new_image_vu), np.min(new_image_minus), np.min(new_image_minus_vu))
 
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}.png', new_image)
             cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_orig.png', np_curr)
