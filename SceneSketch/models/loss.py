@@ -204,7 +204,7 @@ class FlowLoss(torch.nn.Module):
             vs = np.round(uv[:,:,1]).astype(int)
             np_curr = current_image[0].permute(1, 2, 0).cpu().numpy()
             np_center = center_image[0].permute(1, 2, 0).cpu().numpy()
-            h, w = current_image.shape[:2]
+            h, w = np_curr.shape[:2]
             new_image = np.zeros_like(np_curr, dtype=np.uint8)
             new_image_vu = np.zeros_like(np_curr, dtype=np.uint8)
             new_image_minus = np.zeros_like(np_curr, dtype=np.uint8)
