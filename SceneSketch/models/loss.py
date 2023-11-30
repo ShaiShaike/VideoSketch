@@ -199,7 +199,7 @@ class FlowLoss(torch.nn.Module):
     def forward(self, current_image, center_image, motions, mode="train", debug=False, im_name=''):
         flow = self.calc_flow(center_image, current_image).permute(0, 2, 3, 1).squeeze(dim=0)
         if debug:
-            uv = flow[0].cpu().numpy()
+            uv = flow.cpu().numpy()
             us = np.round(uv[:,:,0]).astype(int)
             vs = np.round(uv[:,:,1]).astype(int)
             np_curr = current_image[0].cpu().numpy()
