@@ -11,6 +11,7 @@ import math
 import re
 import numpy as np
 import cv2
+from pathlib import Path
 from .FastFlowNet import FastFlowNet
 from mmflow.datasets import read_flow
 
@@ -195,7 +196,7 @@ class MMFlowLoss(torch.nn.Module):
         return img1 - rgb_mean, img2 - rgb_mean, rgb_mean
 
     def forward(self, current_image, center_image, motions, mode="train", debug=False, im_name=''):
-        flow = torch.from_numpy(read_flow(str(self.args.workdir / f"flow_{self.args.center_frame}.flo"))).to(self.args.device)
+        flow = torch.from_numpy(read_flow(str(Path(self.args.workdir) / f"flow_{self.args.center_frame}.flo"))).to(self.args.device)
         if debug:
             print('flow:', flow.size(), 'motions:', motions.size())
             uv = flow.cpu().numpy()
