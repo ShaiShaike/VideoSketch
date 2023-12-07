@@ -152,6 +152,8 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--end_frame", str(args.end_frame),
                             "--center_frame", str(args.center_frame),
                             "--center_method", str(args.center_method),
+                            "--mmflow_config_file", str(args.mmflow_config_file),
+                            "--mmflow_checkpoint", str(args.mmflow_checkpoint),
                             "--edges_blur", str(args.edges_blur),
                             "--model_ver", str(args.model_ver),
                             "--motion_reg_ratio", str(args.motion_reg_ratio),
