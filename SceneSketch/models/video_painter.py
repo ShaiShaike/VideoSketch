@@ -106,7 +106,7 @@ class VideoPainter(Painter):
             cap_temp.set(cv2.CAP_PROP_POS_FRAMES, args.center_frame)
             success, center_image = cap.read()
             center_image, mask = self.process_image(center_image, args, crop, is_first)
-            center_image = Image.fromarray(np.uint8(center_image.cpu().numpy()))
+            center_image = Image.fromarray(np.uint8(center_image[0].cpu().numpy()))
             center_image.save(str(self.workdir / f"orig_img_{args.center_frame}.png"))
             cap_temp.release()
 
@@ -119,7 +119,7 @@ class VideoPainter(Painter):
             self.prep_timer.tic()
             target, mask = self.process_image(image, args, crop, is_first)
             if 'motionloss' in args.center_method:
-                orig_image = Image.fromarray(np.uint8(target.cpu().numpy()))
+                orig_image = Image.fromarray(np.uint8(target[0].cpu().numpy()))
                 orig_image.save(str(self.workdir / f"orig_img_{args.frame_index}.png"))
             edges = self.calc_edges(target)
             is_first = False
