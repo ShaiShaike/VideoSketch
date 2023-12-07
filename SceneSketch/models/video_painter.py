@@ -99,6 +99,8 @@ class VideoPainter(Painter):
         if not self.workdir.exists():
             makedirs(str(self.workdir))
         
+        is_first = True
+
         if 'motionloss' in args.center_method:
             cap_temp = cv2.VideoCapture(args.video_path)
             cap_temp.set(cv2.CAP_PROP_POS_FRAMES, args.center_frame)
@@ -111,7 +113,7 @@ class VideoPainter(Painter):
 
         cap.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
         success, image = cap.read()
-        is_first = True
+        
         end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
         for frame_index in range(args.start_frame, end_frame):
             self.prep_timer.tic()
