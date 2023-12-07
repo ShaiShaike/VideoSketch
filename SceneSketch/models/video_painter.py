@@ -121,7 +121,7 @@ class VideoPainter(Painter):
             target, mask = self.process_image(image, args, crop, is_first)
             if 'motionloss' in args.center_method:
                 orig_image = Image.fromarray(np.uint8(target.squeeze(0).permute(1, 2, 0).cpu().numpy()))
-                orig_image.save(str(self.workdir / f"orig_img_{args.frame_index}.png"))
+                orig_image.save(str(self.workdir / f"orig_img_{frame_index}.png"))
             edges = self.calc_edges(target)
             is_first = False
             torch.save(edges, str(self.workdir / f"edges_{frame_index}.t"))
@@ -148,7 +148,7 @@ class VideoPainter(Painter):
     
     def calc_flow(self, frame_index, args):
         img1 = str(self.workdir / f"orig_img_{args.center_frame}.png")
-        img2 = str(self.workdir / f"orig_img_{args.frame_index}.png")
+        img2 = str(self.workdir / f"orig_img_{frame_index}.png")
         result = inference_model(self.flow_model, img1, img2)
         # save the optical flow file
         write_flow(result, flow_file=str(self.workdir / f"flow_{args.center_frame}.flo"))
