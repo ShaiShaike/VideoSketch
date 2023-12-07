@@ -190,7 +190,7 @@ class VideoPainter(Painter):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         print('shai', 1, ':', image.shape)
         target = Image.fromarray(image)
-        print('shai', 2, ':', target.size())
+        print('shai', 2, ':', target.size)
         if target.mode == "RGBA":
             # Create a white rgba background
             new_image = Image.new("RGBA", target.size, "WHITE")
@@ -198,17 +198,17 @@ class VideoPainter(Painter):
             new_image.paste(target, (0, 0), target)
             target = new_image
         target = target.convert("RGB")
-        print('shai', 3, ':', target.size())
+        print('shai', 3, ':', target.size)
         if is_first:
             self.dino_attn_helper(target)
-        print('shai', 4, ':', target.size())
+        print('shai', 4, ':', target.size)
         masked_im, mask = utils.get_mask_u2net(args, target)
         
         if args.mask_object:
             target = masked_im
         if args.fix_scale:
             target = utils.fix_image_scale(target)
-            print('shai', 5, ':', target.size())
+            print('shai', 5, ':', target.size)
 
         transforms_ = []
         transforms_.append(transforms.Resize(
@@ -220,7 +220,7 @@ class VideoPainter(Painter):
         data_transforms = transforms.Compose(transforms_)
 
         target_ = data_transforms(target).unsqueeze(0).to(args.device)
-        print('shai', 6, ':', target_.size())
+        print('shai', 6, ':', target_.size)
         mask = Image.fromarray((mask*255).astype(np.uint8)).convert('RGB')
         mask = data_transforms(mask).unsqueeze(0).to(args.device)
         mask[mask < 0.5] = 0
