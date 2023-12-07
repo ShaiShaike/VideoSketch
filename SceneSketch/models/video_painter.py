@@ -106,7 +106,6 @@ class VideoPainter(Painter):
             cap_temp.set(cv2.CAP_PROP_POS_FRAMES, args.center_frame)
             success, center_image = cap.read()
             center_image, mask = self.process_image(center_image, args, crop, is_first)
-            print('shai', 7, ':', center_image.size())
             center_image = Image.fromarray(np.uint8(center_image.squeeze(0).permute(1, 2, 0).cpu().numpy()))
             center_image.save(str(self.workdir / f"orig_img_{args.center_frame}.png"))
             cap_temp.release()
@@ -189,9 +188,7 @@ class VideoPainter(Painter):
             resize_scale = args.pre_resize / max(im_size)
             image = cv2.resize(image, [int(dim * resize_scale) for dim in im_size[::-1]])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        print('shai', 1, ':', image.shape)
         target = Image.fromarray(image)
-        print('shai', 2, ':', target.size, target.mode)
         if target.mode == "RGBA":
             # Create a white rgba background
             new_image = Image.new("RGBA", target.size, "WHITE")
@@ -199,17 +196,14 @@ class VideoPainter(Painter):
             new_image.paste(target, (0, 0), target)
             target = new_image
         target = target.convert("RGB")
-        print('shai', 3, ':', target.size, target.mode)
         if is_first:
             self.dino_attn_helper(target)
-        print('shai', 4, ':', target.size, target.mode)
         masked_im, mask = utils.get_mask_u2net(args, target)
         
         if args.mask_object:
             target = masked_im
         if args.fix_scale:
             target = utils.fix_image_scale(target)
-            print('shai', 5, ':', target.size, target.mode)
 
         transforms_ = []
         transforms_.append(transforms.Resize(
@@ -221,7 +215,6 @@ class VideoPainter(Painter):
         data_transforms = transforms.Compose(transforms_)
 
         target_ = data_transforms(target).unsqueeze(0).to(args.device)
-        print('shai', 6, ':', target_.size())
         mask = Image.fromarray((mask*255).astype(np.uint8)).convert('RGB')
         mask = data_transforms(mask).unsqueeze(0).to(args.device)
         mask[mask < 0.5] = 0
