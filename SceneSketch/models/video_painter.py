@@ -9,6 +9,8 @@ import CLIP_.clip as clip
 from torchvision import transforms
 import torch
 import sketch_utils as utils
+from mmflow.apis import init_model, inference_model
+from mmflow.datasets import write_flow
 
 import os
 import sys
@@ -34,7 +36,6 @@ class Timer:
         return f'total time: {self.sum_time :.1f}sec, avarege time: {self.sum_time / self.amount :.1f}sec'
 
 
-
 class VideoPainter(Painter):
     def __init__(self, args, num_strokes=4, num_segments=4, imsize=224, device=None):
         super().__init__(args, num_strokes, num_segments, imsize, device, None, None, is_video=args.model_ver)
@@ -48,6 +49,8 @@ class VideoPainter(Painter):
             self.reverse_mask = False
         
         self.prep_timer = Timer()
+        if 'motionloss' in args.center_method:
+            self.flow_model = init_model(args.mmflow_config_file, args.mmflow_checkpoint, device=device)
         self.prep_video_inputs(args)
         print('prep time:', self.prep_timer)
         
@@ -95,6 +98,15 @@ class VideoPainter(Painter):
         
         if not self.workdir.exists():
             makedirs(str(self.workdir))
+        
+        if 'motionloss' in args.center_method:
+            with cv2.VideoCapture(args.video_path) as cap_temp:
+                cap_temp.set(cv2.CAP_PROP_POS_FRAMES, args.center_frame)
+                success, center_image = cap.read()
+                center_image, mask = self.process_image(center_image, args, crop, is_first)
+                center_image = torch.transforms.functional.to_pil_image(center_image)
+                cv2.imwrite(str(self.workdir / f"orig_img_{args.center_frame}.png"), center_image)
+
 
         cap.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
         success, image = cap.read()
@@ -103,6 +115,9 @@ class VideoPainter(Painter):
         for frame_index in range(args.start_frame, end_frame):
             self.prep_timer.tic()
             target, mask = self.process_image(image, args, crop, is_first)
+            if 'motionloss' in args.center_method:
+                orig_image = torch.transforms.functional.to_pil_image(target)
+                cv2.imwrite(str(self.workdir / f"orig_img_{args.frame_index}.png"), orig_image)
             edges = self.calc_edges(target)
             is_first = False
             torch.save(edges, str(self.workdir / f"edges_{frame_index}.t"))
@@ -120,9 +135,20 @@ class VideoPainter(Painter):
                 np.save(str(self.workdir / f"attention_map_{frame_index}.npy"), attention_map)
             else:
                 self.attention_map = None
-            
+
+            if 'motionloss' in args.center_method:
+                self.calc_flow(frame_index, args)
+
             success, image = cap.read()
             self.prep_timer.toc()
+    
+    def calc_flow(self, frame_index, args):
+        img1 = str(self.workdir / f"orig_img_{args.center_frame}.png")
+        img2 = str(self.workdir / f"orig_img_{args.frame_index}.png")
+        result = inference_model(self.flow_model, img1, img2)
+        # save the optical flow file
+        write_flow(result, flow_file=str(self.workdir / f"flow_{args.center_frame}.flo"))
+
     
     def calc_edges(self, target):
         images = target.cpu().numpy()

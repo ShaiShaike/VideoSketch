@@ -12,6 +12,7 @@ import re
 import numpy as np
 import cv2
 from .FastFlowNet import FastFlowNet
+from mmflow.datasets import read_flow
 
 
 def compute_grad_norm_losses(losses_dict, model, points_mlp):
@@ -182,6 +183,62 @@ class Loss(nn.Module):
 
         return losses_dict, losses_dict_copy, losses_dict_original_detach
 
+
+class MMFlowLoss(torch.nn.Module):
+    def __init__(self, args):
+        super(MMFlowLoss, self).__init__()
+        self.args = args
+
+    def centralize(self, img1, img2):
+        b, c, h, w = img1.shape
+        rgb_mean = torch.cat([img1, img2], dim=2).view(b, c, -1).mean(2).view(b, c, 1, 1)
+        return img1 - rgb_mean, img2 - rgb_mean, rgb_mean
+
+    def forward(self, current_image, center_image, motions, mode="train", debug=False, im_name=''):
+        flow = torch.from_numpy(read_flow(str(self.args.workdir / f"flow_{self.args.center_frame}.flo"))).to(self.args.device)
+        if debug:
+            print('flow:', flow.size(), 'motions:', motions.size())
+            uv = flow.cpu().numpy()
+            us = np.round(uv[:,:,0]).astype(int)
+            vs = np.round(uv[:,:,1]).astype(int)
+            np_curr = current_image[0].permute(1, 2, 0).cpu().numpy()
+            np_center = center_image[0].permute(1, 2, 0).cpu().numpy()
+            h, w = np_curr.shape[:2]
+            new_image = np.zeros_like(np_curr, dtype=np.uint8)
+            new_image_vu = np.zeros_like(np_curr, dtype=np.uint8)
+            new_image_minus = np.zeros_like(np_curr, dtype=np.uint8)
+            new_image_minus_vu = np.zeros_like(np_curr, dtype=np.uint8)
+            for y in range(h):
+                for x in range(w):
+                    u, v = us[y, x], vs[y, x]
+                    new_image[y, x, :] = np_center[min(0, max(h, y+u)),
+                                                   min(0, max(w, x+v)), :]
+                    new_image_vu[y, x, :] = np_center[min(0, max(h, y+v)),
+                                                   min(0, max(w, x+u)), :]
+                    new_image_minus[y, x, :] = np_center[min(0, max(h, y-u)),
+                                                   min(0, max(w, x-v)), :]
+                    new_image_minus_vu[y, x, :] = np_center[min(0, max(h, y-v)),
+                                                   min(0, max(w, x-u)), :]
+            print('new_image:', new_image.shape)
+            print('uv', uv.shape)
+            print('np_center:', np_center.shape)
+            print('maxes:', np.max(np_curr), np.max(np_center), np.max(new_image), np.max(new_image_vu), np.max(new_image_minus), np.max(new_image_minus_vu))
+            print('mins:', np.min(np_curr), np.min(np_center), np.min(new_image), np.min(new_image_vu), np.min(new_image_minus), np.min(new_image_minus_vu))
+
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}.png', new_image * 255)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_orig.png', np_curr * 255)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_vu.png', new_image_vu * 255)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus.png', new_image_minus * 255)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_minus_vu.png', new_image_minus_vu * 255)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_u.png', us + h//2)
+            cv2.imwrite(f'/content/gdrive/My Drive/Final Project_206899080/results/debug/{im_name}_v.png', vs + w//2)
+
+
+        is_motion_point = motions[:, :, 2].unsqueeze(dim=-1)
+        points_flow = motions[:, :, :2]
+        flow_loss = torch.sum(is_motion_point * torch.abs(points_flow - flow)) / torch.sum(is_motion_point) / flow.size(dim=1)
+        return flow_loss
+    
 
 class FlowLoss(torch.nn.Module):
     def __init__(self, flownet_path):

@@ -26,7 +26,7 @@ from pathlib import Path
 
 import config
 import sketch_utils as utils
-from models.loss import Loss, FlowLoss
+from models.loss import Loss, MMFlowLoss
 from models.painter_params import Painter, PainterOptimizer
 from models.video_painter import VideoPainter
 from IPython.display import display, SVG
@@ -78,7 +78,7 @@ def get_target(args):
 def main(args):
     torch.manual_seed(args.seed)
     loss_func = Loss(args)
-    flowloss_func = FlowLoss(args.flownet_path)
+    flowloss_func = MMFlowLoss(args.flownet_path)
     # utils.log_input(args.use_wandb, 0, inputs, args.output_dir)
     renderer = load_renderer(args)
     

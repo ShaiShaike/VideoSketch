@@ -35,6 +35,8 @@ parser.add_argument("--center_interval_ratio", type=float, default=1.5)
 parser.add_argument("-scheduler", action='store_true')
 parser.add_argument("--num_pos_encoding", type=int, default=0)
 parser.add_argument("--flownet_path", type=str, default='/content/FastFlowNet/checkpoints/fastflownet_ft_mix.pth')
+parser.add_argument("--mmflow_config_file", type=str, default='/content/mmflow/configs/raft/raft_8x2_100k_mixed_368x768.py')
+parser.add_argument("--mmflow_checkpoint", type=str, default='/root/.cache/mim/raft_8x2_100k_mixed_368x768.pth')
 parser.add_argument("--pre_resize", type=int, default=0)
 parser.add_argument("--center_crop", type=int, default=0)
 parser.add_argument("--output_pref", type=str, default="for_arik",
