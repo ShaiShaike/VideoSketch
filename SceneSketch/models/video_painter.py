@@ -100,12 +100,13 @@ class VideoPainter(Painter):
             makedirs(str(self.workdir))
         
         if 'motionloss' in args.center_method:
-            with cv2.VideoCapture(args.video_path) as cap_temp:
-                cap_temp.set(cv2.CAP_PROP_POS_FRAMES, args.center_frame)
-                success, center_image = cap.read()
-                center_image, mask = self.process_image(center_image, args, crop, is_first)
-                center_image = torch.transforms.functional.to_pil_image(center_image)
-                cv2.imwrite(str(self.workdir / f"orig_img_{args.center_frame}.png"), center_image)
+            cap_temp = cv2.VideoCapture(args.video_path)
+            cap_temp.set(cv2.CAP_PROP_POS_FRAMES, args.center_frame)
+            success, center_image = cap.read()
+            center_image, mask = self.process_image(center_image, args, crop, is_first)
+            center_image = torch.transforms.functional.to_pil_image(center_image)
+            cv2.imwrite(str(self.workdir / f"orig_img_{args.center_frame}.png"), center_image)
+            cap_temp.release()
 
 
         cap.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
