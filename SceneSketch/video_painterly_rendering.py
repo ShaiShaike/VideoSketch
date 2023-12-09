@@ -29,7 +29,7 @@ import sketch_utils as utils
 from models.loss import Loss, MMFlowLoss
 from models.painter_params import Painter, PainterOptimizer
 from models.video_painter import VideoPainter
-from utils import Mosaic
+from .utils import Mosaic
 from IPython.display import display, SVG
 import matplotlib.pyplot as plt
 # from torch import autograd
