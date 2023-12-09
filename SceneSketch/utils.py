@@ -5,7 +5,7 @@ class Mosaic:
     def __init__(self, imshape, padding=10) -> None:
         self.padding = padding
         self.h_mosaic = 2 * imshape[0] + 3 * padding
-        self.mosaic = np.uint8(255 * np.ones((h_mosaic, padding, imshape[2])))
+        self.mosaic = np.uint8(255 * np.ones((self.h_mosaic, padding, imshape[2])))
 
     def add(self, image, orig_image):
         h_padding = np.uint8(255 * np.ones((self.h_mosaic, self.padding, self.mosaic.shape[2])))
