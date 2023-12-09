@@ -258,6 +258,7 @@ if __name__ == "__main__":
 
 
     # save the mlps for the best normalised loss
+    os.makedirs(f"{output_dir}/best", exist_ok=True)
     if args.width_optim:
         sorted_final_n = dict(sorted(losses_best_normalised.items(), key=lambda item: item[1]))
         winning_trial = list(sorted_final_n.keys())[0]
@@ -270,7 +271,7 @@ if __name__ == "__main__":
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.svg",
                     f"{output_dir}/{winning_trial}/best_frame_{frame_num}.svg")
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.png",
-                    f"{output_dir}/{winning_trial}/best_frame_{frame_num}.png")
+                    f"{output_dir}/best/best_frame_{frame_num}.png")
         # copyfile(f"{output_dir}/{winning_trial}/best_iter_video.mp4",
         #             f"{output_dir}/{winning_trial}/best_video.mp4")
         copyfile(f"{output_dir}/{winning_trial}/points_mlp.pt",
@@ -280,6 +281,13 @@ if __name__ == "__main__":
                 
         for folder_name in list(sorted_final_n.keys()):
             shutil.rmtree(f"{output_dir}/{folder_name}/mlps")
+                
+            copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.png",
+                    f"{output_dir}/best/best_frame_{frame_num}.png")
+        for child in Path(f"{output_dir}/{winning_trial}").iterdir():
+            if 'mosaic' in str(child):
+                shutil.copy(str(child),
+                            str(f"{output_dir}/best/"))
     
     # in this case it's a baseline run to produce the first row
     else:
@@ -293,7 +301,7 @@ if __name__ == "__main__":
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.svg",
                     f"{output_dir}/{winning_trial}/best_frame_{frame_num}.svg")
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.png",
-                    f"{output_dir}/{winning_trial}/best_frame_{frame_num}.png")
+                    f"{output_dir}/best/best_frame_{frame_num}.png")
         # copyfile(f"{output_dir}/{winning_trial}/best_iter_video.mp4",
         #             f"{output_dir}/{winning_trial}/best_video.mp4")
         copyfile(f"{output_dir}/{winning_trial}/points_mlp.pt",
@@ -304,3 +312,8 @@ if __name__ == "__main__":
         if os.path.exists(f"{output_dir}/{winning_trial}/resize_params.npy"):
             copyfile(f"{output_dir}/{winning_trial}/resize_params.npy",
                     f"{output_dir}/resize_params.npy")
+        for child in Path(f"{output_dir}/{winning_trial}").iterdir():
+            if 'mosaic' in str(child):
+                shutil.copy(str(child),
+                            str(f"{output_dir}/best/"))
+    
