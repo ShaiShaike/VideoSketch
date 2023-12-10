@@ -250,10 +250,10 @@ def main(args):
                             sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
                     else:
                         sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
-                    mosaic.add(np.uint8(sketches.squeeze(0).permute(1, 2, 0).cpu().numpy()),
-                               np.uint8(inputs.squeeze(0).permute(1, 2, 0).cpu().numpy()))
+                    mosaic.add((sketches * 255).squeeze(0).permute(1, 2, 0).detach().cpu().numpy().astype('uint8'),
+                               (inputs * 255).squeeze(0).permute(1, 2, 0).detach().cpu().numpy().astype('uint8'))
                 mosaic.save(str(Path(args.workdir) / f'eval_epoch_{epoch}.png'))
-                
+
                 configs_to_save["loss_eval"].append(loss_eval.item())
                 if "num_strokes" not in configs_to_save.keys():
                     configs_to_save["num_strokes"] = []

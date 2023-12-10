@@ -266,7 +266,8 @@ if __name__ == "__main__":
         #                     allow_pickle=True)[()]
         copyfile(f"{output_dir}/{winning_trial}/svg_logs/init_svg.svg",
                 f"{output_dir}/init.svg")
-        end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
+        slomotion = 3
+        end_frame = (args.end_frame - args.start_frame + 100) * slomotion + args.start_frame if args.end_frame != -1 else args.end_frame
         for frame_num in range(args.start_frame, end_frame):
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.svg",
                     f"{output_dir}/{winning_trial}/best_frame_{frame_num}.svg")
@@ -285,7 +286,7 @@ if __name__ == "__main__":
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.png",
                     f"{output_dir}/best/best_frame_{frame_num}.png")
         for child in Path(f"{output_dir}/{winning_trial}").iterdir():
-            if 'mosaic' in str(child):
+            if 'eval_epoch' in str(child):
                 shutil.copy(str(child),
                             str(f"{output_dir}/best/"))
     
@@ -296,7 +297,8 @@ if __name__ == "__main__":
         print(f"{output_dir}/{winning_trial}")
         copyfile(f"{output_dir}/{winning_trial}/svg_logs/init_svg.svg",
                 f"{output_dir}/init.svg")
-        end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
+        slomotion = 3
+        end_frame = (args.end_frame - args.start_frame + 100) * slomotion + args.start_frame if args.end_frame != -1 else args.end_frame
         for frame_num in range(args.start_frame, end_frame):
             copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}.svg",
                     f"{output_dir}/{winning_trial}/best_frame_{frame_num}.svg")
@@ -313,7 +315,7 @@ if __name__ == "__main__":
             copyfile(f"{output_dir}/{winning_trial}/resize_params.npy",
                     f"{output_dir}/resize_params.npy")
         for child in Path(f"{output_dir}/{winning_trial}").iterdir():
-            if 'mosaic' in str(child):
+            if 'eval_epoch' in str(child):
                 shutil.copy(str(child),
                             str(f"{output_dir}/best/"))
     
