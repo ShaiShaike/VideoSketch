@@ -150,7 +150,7 @@ class VideoPainter(Painter):
         img2 = str(self.workdir / f"orig_img_{frame_index}.png")
         result = inference_model(self.flow_model, img1, img2)
         # save the optical flow file
-        write_flow(result, flow_file=str(self.workdir / f"flow_{args.center_frame}.flo"))
+        write_flow(result[:, :, ::-1], flow_file=str(self.workdir / f"flow_{args.center_frame}.flo"))
 
     
     def calc_edges(self, target):
