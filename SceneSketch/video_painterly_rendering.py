@@ -231,8 +231,6 @@ def main(args):
                             sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
                     else:
                         sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
-                    mosaic.add(np.uint8(sketches.squeeze(0).permute(1, 2, 0).cpu().numpy()),
-                               np.uint8(inputs.squeeze(0).permute(1, 2, 0).cpu().numpy()))
                     losses_dict_weighted_eval, losses_dict_norm_eval, losses_dict_original_eval = loss_func(sketches, inputs, counter, renderer.get_widths(), renderer=renderer, mode="eval", width_opt=renderer.width_optim)
                     # motion_regularization_eval = motions[:, 1:] - motions[:, :-1]
                     # motion_regularization_eval = motion_regularization_eval * motion_regularization_eval
@@ -241,7 +239,21 @@ def main(args):
                         edgeloss += torch.sum(sketches * (1 - edges)) / torch.sum(sketches) / 1000
                     detail_loss.append(sum(list(losses_dict_weighted_eval.values())))
                     loss_eval += sum(list(losses_dict_weighted_eval.values())) #+ args.motion_reg_ratio * sum(motion_regularization_eval)
+                
+                for eval_frame in range(args.start_frame, args.end_frame, max(1, (args.end_frame - args.start_frame) // 8)):
+                    renderer.load_clip_attentions_and_mask(eval_frame)
+                    inputs = renderer.get_target(eval_frame)
+                    if 'centerloss' in args.center_method:
+                        if 'motionloss' in args.center_method:
+                            sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image())
+                        else:
+                            sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+                    else:
+                        sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
+                    mosaic.add(np.uint8(sketches.squeeze(0).permute(1, 2, 0).cpu().numpy()),
+                               np.uint8(inputs.squeeze(0).permute(1, 2, 0).cpu().numpy()))
                 mosaic.save(str(Path(args.workdir) / f'eval_epoch_{epoch}.png'))
+                
                 configs_to_save["loss_eval"].append(loss_eval.item())
                 if "num_strokes" not in configs_to_save.keys():
                     configs_to_save["num_strokes"] = []
