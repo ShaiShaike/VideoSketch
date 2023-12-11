@@ -126,7 +126,7 @@ class VideoPainter(Painter):
             torch.save(edges, str(self.workdir / f"edges_{frame_index}.t"))
             torch.save(mask, str(self.workdir / f"mask_{frame_index}.t"))
             torch.save(target, str(self.workdir / f"frame_{frame_index}.t"))
-            Image.fromarray(np.uint8(edges[0].numpy() * 255)).save(f"/content/gdrive/My Drive/Final Project_206899080/results/black_horse_8_debug_curves_8k_centerloss_onecycle_level_3_centerlevel_7_model_ver_1/edges_{frame_index}.png")
+            # Image.fromarray(np.uint8(edges[0].numpy() * 255)).save(f"/content/gdrive/My Drive/Final Project_206899080/results/black_horse_8_debug_curves_8k_centerloss_onecycle_level_3_centerlevel_7_model_ver_1/edges_{frame_index}.png")
             
             clip_attentions = self.clip_it(target)
             print('saving...', str(self.workdir / f"clip_attentions_{frame_index}.t"))
