@@ -29,5 +29,5 @@ class Mosaic:
         print('mosaic shape:', self.mosaic.shape)
         print(str(path))
         cv2.imwrite(str(path), self.mosaic)
-        cv2.imwrite(f"/content/gdrive/My Drive/Final Project_206899080/results/debug/{str(path).split('//')[-1]}")
+        cv2.imwrite(f"/content/gdrive/My Drive/Final Project_206899080/results/debug/{str(path).split('//')[-1]}", self.mosaic)
         Image.fromarray(self.mosaic).save(f"/content/gdrive/My Drive/Final Project_206899080/results/debug/PIL_{str(path).split('//')[-1]}")
