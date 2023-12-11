@@ -286,6 +286,7 @@ def main(args):
                         terminate = False
                         
                         if args.mlp_train and args.optimize_points and not args.width_optim:
+                            print('saving model epoch', epoch)
                             torch.save({
                                 'model_state_dict': renderer.get_mlp().state_dict(),
                                 'optimizer_state_dict': optimizer.get_points_optim().state_dict(),
