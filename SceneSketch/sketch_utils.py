@@ -583,7 +583,8 @@ def inference_video(args, eps=1e-4, is_video=0):
         # frame_points = frame_points.reshape(orig_shape)
 
         num_batch = points.shape[0]
-        timeframe = torch.ones((num_batch, 1), device=device) * frame_num / slomotion
+        timeframe = torch.ones((num_batch, 1), device=device) * (args.start_frame + (frame_num - args.start_frame) / slomotion)
+        print('saving frame:', args.start_frame + (frame_num - args.start_frame) / slomotion)
         if is_video == 2:
             points_and_time = torch.cat([time_layer, timeframe], dim=1)
         else:
