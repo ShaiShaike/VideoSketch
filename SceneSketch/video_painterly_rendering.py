@@ -13,6 +13,7 @@ import time
 import traceback
 
 import numpy as np
+import cv2
 import PIL
 import torch
 import torch.nn as nn
@@ -179,10 +180,11 @@ def main(args):
         if 'edgeloss' in args.center_method:
             edges = renderer.get_edges(batch_frame_indexes)
             edgeloss = torch.sum(sketches * (1 - edges)) / torch.sum(sketches) / 1000
-            if epoch < args.num_iter / 3:
-                edge_weight = 0 # 10 ** (-1 + epoch * 3 / args.num_iter)
-            else:
-                edge_weight = 1e-2 # 10 ** (- 2 * (epoch - args.num_iter / 3) * 2 / args.num_iter)
+            # if epoch < args.num_iter / 3:
+            #     edge_weight = 0 # 10 ** (-1 + epoch * 3 / args.num_iter)
+            # else:
+            #     edge_weight = 1e-2 # 10 ** (- 2 * (epoch - args.num_iter / 3) * 2 / args.num_iter)
+            edge_weight = 10 ** (-4 + 2 * epoch / args.num_iter)
             loss += edge_weight * edgeloss
         if 'motionloss' in args.center_method:
             motion_weight = 10 ** (-2 - 2 * epoch / args.num_iter)
@@ -340,6 +342,21 @@ def main(args):
     if args.width_optim:
         utils.log_best_normalised_sketch(configs_to_save, args.output_dir, args.use_wandb, args.device, args.eval_interval, args.min_eval_iter)
     utils.inference_video(args, is_video=args.model_ver)
+
+    
+    for frame_num in range(args.start_frame, args.end_frame + args.future_frames):
+        for part_index, part_frame in enumerate(np.arange(0, 1, 1 / args.slomotion)):
+            renderer.load_clip_attentions_and_mask(frame_num + part_frame)
+            if 'centerloss' in args.center_method:
+                if 'motionloss' in args.center_method:
+                    sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image())
+                else:
+                    sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+            else:
+                sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
+            
+            cv2.imwrite(str(Path(args.output_dir) / f'best_iter_frame_{frame_num}_{part_index}.png'),
+                        (sketches * 255).squeeze(0).permute(1, 2, 0).detach().cpu().numpy().astype('uint8'))
     return configs_to_save
 
 if __name__ == "__main__":

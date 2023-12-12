@@ -37,6 +37,8 @@ parser.add_argument("--num_pos_encoding", type=int, default=0)
 parser.add_argument("--flownet_path", type=str, default='/content/FastFlowNet/checkpoints/fastflownet_ft_mix.pth')
 parser.add_argument("--mmflow_config_file", type=str, default='/content/mmflow/configs/raft/raft_8x2_100k_mixed_368x768.py')
 parser.add_argument("--mmflow_checkpoint", type=str, default='/root/.cache/mim/raft_8x2_100k_mixed_368x768.pth')
+parser.add_argument("--future_frames", type=int, default=0)
+parser.add_argument("--slowmotion", type=int, default=1)
 parser.add_argument("--pre_resize", type=int, default=0)
 parser.add_argument("--center_crop", type=int, default=0)
 parser.add_argument("--output_pref", type=str, default="for_arik",
@@ -154,6 +156,8 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--center_method", str(args.center_method),
                             "--mmflow_config_file", str(args.mmflow_config_file),
                             "--mmflow_checkpoint", str(args.mmflow_checkpoint),
+                            "--future_frames", str(args.future_frames),
+                            "--slowmotion", str(args.slowmotion),
                             "--edges_blur", str(args.edges_blur),
                             "--model_ver", str(args.model_ver),
                             "--motion_reg_ratio", str(args.motion_reg_ratio),
@@ -289,6 +293,10 @@ if __name__ == "__main__":
             if 'eval_epoch' in str(child):
                 shutil.copy(str(child),
                             str(f"{output_dir}/best/"))
+        for frame_num in range(args.start_frame, args.end_frame + args.future_frames):
+            for part_index, part_frame in enumerate(np.arange(0, 1, 1 / args.slomotion)):
+                copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}_{part_index}.png",
+                         f"{output_dir}/best/best_frame_{frame_num}_{part_index}.png")
     
     # in this case it's a baseline run to produce the first row
     else:
@@ -318,4 +326,8 @@ if __name__ == "__main__":
             if 'eval_epoch' in str(child):
                 shutil.copy(str(child),
                             str(f"{output_dir}/best/"))
+        for frame_num in range(args.start_frame, args.end_frame + args.future_frames):
+            for part_index, part_frame in enumerate(np.arange(0, 1, 1 / args.slomotion)):
+                copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}_{part_index}.png",
+                         f"{output_dir}/best/best_frame_{frame_num}_{part_index}.png")
     

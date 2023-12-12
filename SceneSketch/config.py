@@ -189,6 +189,8 @@ def parse_video_arguments():
     parser.add_argument("--flownet_path", type=str, default='./checkpoints/fastflownet_ft_mix.pth')
     parser.add_argument("--mmflow_config_file", type=str)
     parser.add_argument("--mmflow_checkpoint", type=str)
+    parser.add_argument("--future_frames", type=int, default=0)
+    parser.add_argument("--slowmotion", type=int, default=1)
     parser.add_argument("-scheduler", action='store_true')
     parser.add_argument("--num_pos_encoding", type=int, default=0)
     parser.add_argument("--output_dir", type=str,
