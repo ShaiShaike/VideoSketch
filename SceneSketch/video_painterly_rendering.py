@@ -346,7 +346,7 @@ def main(args):
     
     for frame_num in range(args.start_frame, args.end_frame + args.future_frames):
         for part_index, part_frame in enumerate(np.arange(0, 1, 1 / args.slowmotion)):
-            renderer.load_clip_attentions_and_mask(frame_num + part_frame)
+            renderer.frame_num = frame_num + part_frame
             if 'centerloss' in args.center_method:
                 if 'motionloss' in args.center_method:
                     sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image())
