@@ -294,7 +294,7 @@ if __name__ == "__main__":
                 shutil.copy(str(child),
                             str(f"{output_dir}/best/"))
         for frame_num in range(args.start_frame, args.end_frame + args.future_frames):
-            for part_index, part_frame in enumerate(np.arange(0, 1, 1 / args.slomotion)):
+            for part_index, part_frame in enumerate(np.arange(0, 1, 1 / args.slowmotion)):
                 copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}_{part_index}.png",
                          f"{output_dir}/best/best_frame_{frame_num}_{part_index}.png")
     
@@ -327,7 +327,7 @@ if __name__ == "__main__":
                 shutil.copy(str(child),
                             str(f"{output_dir}/best/"))
         for frame_num in range(args.start_frame, args.end_frame + args.future_frames):
-            for part_index, part_frame in enumerate(np.arange(0, 1, 1 / args.slomotion)):
+            for part_index, part_frame in enumerate(np.arange(0, 1, 1 / args.slowmotion)):
                 copyfile(f"{output_dir}/{winning_trial}/best_iter_frame_{frame_num}_{part_index}.png",
                          f"{output_dir}/best/best_frame_{frame_num}_{part_index}.png")
     
