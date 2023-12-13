@@ -179,7 +179,7 @@ def main(args):
             loss += center_weight * sum(list(center_losses_dict_weighted.values()))
         if 'edgeloss' in args.center_method:
             edges = renderer.get_edges(batch_frame_indexes)
-            edgeloss = torch.sum(sketches * (1 - edges)) / torch.sum(sketches) / 1000
+            edgeloss = torch.sum(sketches * (1 - edges)) / torch.sqrt(torch.sum(sketches)) / 1000
             # if epoch < args.num_iter / 3:
             #     edge_weight = 0 # 10 ** (-1 + epoch * 3 / args.num_iter)
             # else:
