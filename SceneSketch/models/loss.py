@@ -12,7 +12,7 @@ import re
 import numpy as np
 import cv2
 from pathlib import Path
-from .FastFlowNet import FastFlowNet
+# from .FastFlowNet import FastFlowNet
 from mmflow.datasets import read_flow
 
 
@@ -240,7 +240,7 @@ class MMFlowLoss(torch.nn.Module):
         flow_loss = torch.sum(is_motion_point * torch.abs(points_flow - flow)) / torch.sum(is_motion_point) / flow.size(dim=1)
         return flow_loss
     
-
+"""
 class FlowLoss(torch.nn.Module):
     def __init__(self, flownet_path):
         super(FlowLoss, self).__init__()
@@ -331,7 +331,7 @@ class FlowLoss(torch.nn.Module):
             flow[:, 0, :, :] *= scale_w
             flow[:, 1, :, :] *= scale_h
         return flow
-
+"""
 
 class CLIPLoss(torch.nn.Module):
     def __init__(self, args):
