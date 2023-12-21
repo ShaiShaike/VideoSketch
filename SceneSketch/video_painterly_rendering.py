@@ -193,7 +193,13 @@ def main(args):
                 motion_weight = 10 ** (1 - 0.5 * epoch * 2 / args.num_iter)
             loss += motion_weight * flowloss
 
-        loss.backward()
+        try:
+            loss.backward()
+        except:
+            print(f'flowloss: {flowloss.item()}')
+            print(f'weighted flowloss: {(motion_weight * flowloss).item()}')
+            for key, value in losses_dict_weighted.items():
+                print(f'{key}: {value.item()}')
         optimizer.step_()
 
         if epoch % args.save_interval == 0:
