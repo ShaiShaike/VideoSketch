@@ -188,9 +188,9 @@ def main(args):
             loss += edge_weight * edgeloss
         if 'motionloss' in args.center_method:
             if epoch < args.num_iter // 2:
-                motion_weight = 10 ** (-3 + 2 * epoch * 2 / args.num_iter)
+                motion_weight = 10 ** (-4 + 2 * epoch * 2 / args.num_iter)
             else:
-                motion_weight = 10 ** (1 - 0.5 * epoch * 2 / args.num_iter)
+                motion_weight = 10 ** (-2 - 1 * epoch * 2 / args.num_iter)
             loss += motion_weight * flowloss
 
         try:
