@@ -236,12 +236,12 @@ def main(args):
                     inputs = renderer.get_target(eval_frame)
                     if 'centerloss' in args.center_method:
                         if 'motionloss' in args.center_method:
-                            sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image())
+                            sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image(is_colorful=True))
                             flowloss += flowloss_func(inputs, center_inputs, motion_image)
                         else:
-                            sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+                            sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image(is_colorful=True))
                     else:
-                        sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
+                        sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image(is_colorful=True))
                     losses_dict_weighted_eval, losses_dict_norm_eval, losses_dict_original_eval = loss_func(sketches, inputs, counter, renderer.get_widths(), renderer=renderer, mode="eval", width_opt=renderer.width_optim)
                     # motion_regularization_eval = motions[:, 1:] - motions[:, :-1]
                     # motion_regularization_eval = motion_regularization_eval * motion_regularization_eval
@@ -256,11 +256,11 @@ def main(args):
                     inputs = renderer.get_target(eval_frame)
                     if 'centerloss' in args.center_method:
                         if 'motionloss' in args.center_method:
-                            sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image())
+                            sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image(is_colorful=True))
                         else:
-                            sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+                            sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image(is_colorful=True))
                     else:
-                        sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
+                        sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image(is_colorful=True))
                     mosaic.add((sketches * 255).squeeze(0).permute(1, 2, 0).detach().cpu().numpy().astype('uint8'),
                                (inputs * 255).squeeze(0).permute(1, 2, 0).detach().cpu().numpy().astype('uint8'))
                 mosaic.save(str(Path(args.output_dir) / f'eval_epoch_{epoch}.png'))
@@ -358,11 +358,11 @@ def main(args):
             renderer.frame_num = frame_num + part_frame
             if 'centerloss' in args.center_method:
                 if 'motionloss' in args.center_method:
-                    sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image())
+                    sketches, motions, center_sketches, motion_image = (tensor.to(args.device) for tensor in renderer.get_image(is_colorful=True))
                 else:
-                    sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image())
+                    sketches, motions, center_sketches = (tensor.to(args.device) for tensor in renderer.get_image(is_colorful=True))
             else:
-                sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image())
+                sketches, motions = (tensor.to(args.device) for tensor in renderer.get_image(is_colorful=True))
             
             cv2.imwrite(str(Path(args.output_dir) / f'best_iter_frame_{frame_num}_{part_index}.png'),
                         (sketches * 255).squeeze(0).permute(1, 2, 0).detach().cpu().numpy().astype('uint8'))

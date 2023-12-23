@@ -39,6 +39,23 @@ class Painter(torch.nn.Module):
         self.optimize_points = args.optimize_points
         self.optimize_points_global = args.optimize_points
 
+        self.colors = [torch.tensor([0, 0, 1, 1]),
+                       torch.tensor([0, 1, 0, 1]),
+                       torch.tensor([1, 0, 0, 1]),
+                       torch.tensor([0, 0.9, 1, 1]),
+                       torch.tensor([0.6, 0, 1, 1]),
+                       torch.tensor([1, 0, 0.6, 1]),
+                       torch.tensor([1, 0.5, 0, 1]),
+                       torch.tensor([1, 0.9, 0, 1]),
+                       torch.tensor([0.5, 0.7, 0, 1]),
+                       torch.tensor([0.45, 0.3, 0, 1]),
+                       torch.tensor([0.5, 0.5, 0.5, 1]),
+                       torch.tensor([0, 0.4, 0.4, 1]),
+                       torch.tensor([0, 0, 0.4, 1]),
+                       torch.tensor([0.5, 0, 0, 1]),
+                       torch.tensor([0.8, 0, 0.4, 1]),
+                       torch.tensor([0.8, 0.6, 0.4, 1])]
+
         self.shapes = []
         self.shape_groups = []
         self.device = device
@@ -178,14 +195,14 @@ class Painter(torch.nn.Module):
         # return img
         # utils.imwrite(img.cpu(), '{}/init.png'.format(args.output_dir), gamma=args.gamma, use_wandb=args.use_wandb, wandb_name="init")
 
-    def get_image(self, mode="train"):
+    def get_image(self, mode="train", is_colorful=False):
         if self.mlp_train:
             if self.is_video:
                 if 'centerloss' in self.args.center_method:
                     if 'motionloss' in self.args.center_method:
-                        img, motions, center_img, motion_image  = self.mlp_pass(mode)
+                        img, motions, center_img, motion_image  = self.mlp_pass(mode, is_colorful)
                     else:
-                        img, motions, center_img = self.mlp_pass(mode)
+                        img, motions, center_img = self.mlp_pass(mode, is_colorful)
                     center_opacity = center_img[:, :, 3:4]
                     center_img = center_opacity * center_img[:, :, :3] + torch.ones(
                         center_img.shape[0], center_img.shape[1], 3, device = self.device) * (1 - center_opacity)
@@ -194,9 +211,9 @@ class Painter(torch.nn.Module):
                     center_img = center_img.unsqueeze(0)
                     center_img = center_img.permute(0, 3, 1, 2).to(self.device) # NHWC -> NCHW
                 else:
-                    img, motions = self.mlp_pass(mode)
+                    img, motions = self.mlp_pass(mode, is_colorful)
             else:
-                img = self.mlp_pass(mode)
+                img = self.mlp_pass(mode, is_colorful)
         else:
             img = self.render_warp(mode)
         opacity = img[:, :, 3:4]
@@ -213,7 +230,7 @@ class Painter(torch.nn.Module):
             return img, motions
         return img
     
-    def mlp_pass(self, mode, eps=1e-4):
+    def mlp_pass(self, mode, is_colorful=False, eps=1e-4):
         """
         update self.shapes etc through mlp pass instead of directly (should be updated with the optimizer as well).
         """
@@ -240,7 +257,7 @@ class Painter(torch.nn.Module):
 
         if self.is_video:
             if 'centerloss' in self.args.center_method:
-                center_img, _, _ = self.points2image(points, mode, eps)
+                center_img, _, _ = self.points2image(points, mode, is_colorful, eps)
             # points = points.reshape((-1, 2))
             # num_points = points.shape[0]
             # timeframe = torch.ones((num_points, 1), device=self.device) * self.frame_num
@@ -265,7 +282,7 @@ class Painter(torch.nn.Module):
             self.stroke_probs = hard_mask[:, 0] * self.out_of_canvas_mask
             self.widths = self.stroke_probs * self.init_widths            
         
-        img, shapes, shape_groups = self.points2image(points, mode, eps)
+        img, shapes, shape_groups = self.points2image(points, mode, is_colorful, eps)
 
         self.shapes = shapes.copy()
         self.shape_groups = shape_groups.copy()
@@ -278,7 +295,7 @@ class Painter(torch.nn.Module):
             return img, motions
         return img
         
-    def points2image(self, points, mode, eps=1e-4):
+    def points2image(self, points, mode, is_colorful=False, eps=1e-4):
         
         # normalize back to canvas size [0, 224] and reshape
         all_points = 0.5 * (points + 1.0) * self.canvas_width
@@ -292,7 +309,7 @@ class Painter(torch.nn.Module):
         # define new primitives to render
         shapes = []
         shape_groups = []
-        for p in range(self.num_paths):
+        for ind, p in enumerate(range(self.num_paths)):
             width = torch.tensor(self.width)
             if self.width_optim_global and mode != "init":
                 width = self.widths[p]
@@ -305,9 +322,10 @@ class Painter(torch.nn.Module):
                 if not is_in_canvas_:
                     self.out_of_canvas_mask[p] = 0
             shapes.append(path)
+            color = self.colors[ind % len(self.colors)] if is_colorful else torch.tensor([0,0,0,1])
             path_group = pydiffvg.ShapeGroup(
                 shape_ids=torch.tensor([len(shapes) - 1]),
-                fill_color=None,
+                fill_color=color,
                 stroke_color=torch.tensor([0,0,0,1]))
             shape_groups.append(path_group)
         
