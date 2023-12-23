@@ -325,8 +325,8 @@ class Painter(torch.nn.Module):
             color = self.colors[ind % len(self.colors)] if is_colorful else torch.tensor([0,0,0,1])
             path_group = pydiffvg.ShapeGroup(
                 shape_ids=torch.tensor([len(shapes) - 1]),
-                fill_color=color,
-                stroke_color=torch.tensor([0,0,0,1]))
+                fill_color=None,
+                stroke_color=color)
             shape_groups.append(path_group)
         
         _render = pydiffvg.RenderFunction.apply
