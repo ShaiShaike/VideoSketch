@@ -358,9 +358,10 @@ class Painter(torch.nn.Module):
             # all_points = all_points.detach()
         
         # define new primitives to render
+        randomly_reversed_range = lambda num: range(num) if np.random.rand() > 0.5 else reversed(range(num))
         shapes = []
         shape_groups = []
-        for p in range(self.num_paths):
+        for p in randomly_reversed_range(self.num_paths):
             for point in range(self.num_control_points):
                 path = pydiffvg.Circle(radius = torch.tensor(1.0),
                          center = all_points[0 ,p, point])
