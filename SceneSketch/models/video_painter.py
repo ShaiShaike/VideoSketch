@@ -101,23 +101,31 @@ class VideoPainter(Painter):
         
         is_first = True
 
+        cap.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
+        success, image = cap.read()
+        
+        if args.mask_path:
+            cap_mask = cap = cv2.VideoCapture(args.mask_path)
+            cap_mask.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
+            _, mask_input = cap_mask.read()
+            mask_input = cv2.cvtColor(mask_input, cv2.COLOR_BGR2GRAY)
+        else:
+            mask_input = None
+        
         if 'motionloss' in args.center_method:
             cap_temp = cv2.VideoCapture(args.video_path)
             cap_temp.set(cv2.CAP_PROP_POS_FRAMES, args.center_frame)
             success, center_image = cap.read()
-            center_image, mask = self.process_image(center_image, args, crop, is_first)
+            center_image, mask = self.process_image(center_image, args, crop, is_first, mask_input=mask_input)
             center_image = Image.fromarray(np.uint8(center_image.squeeze(0).permute(1, 2, 0).cpu().numpy()))
             center_image.save(str(self.workdir / f"orig_img_{args.center_frame}.png"))
             cap_temp.release()
 
 
-        cap.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
-        success, image = cap.read()
-        
         end_frame = args.end_frame + 1 if args.end_frame != -1 else args.end_frame
         for frame_index in range(args.start_frame, end_frame):
             self.prep_timer.tic()
-            target, mask = self.process_image(image, args, crop, is_first)
+            target, mask = self.process_image(image, args, crop, is_first, mask_input=mask_input)
             if 'motionloss' in args.center_method:
                 orig_image = Image.fromarray(np.uint8(target.squeeze(0).permute(1, 2, 0).cpu().numpy()))
                 orig_image.save(str(self.workdir / f"orig_img_{frame_index}.png"))
@@ -177,18 +185,24 @@ class VideoPainter(Painter):
         self.w_featmap = img.shape[-2] // patch_size
         self.h_featmap = img.shape[-1] // patch_size
 
-    def process_image(self, image, args, crop, is_first=False):
+    def process_image(self, image, args, crop, is_first=False, mask_input=None):
         if crop is not None:
             h_start, h_end, w_start, w_end = crop
             image = image[h_start:h_end, w_start:w_end]
+            if mask_input is not None:
+                mask_input = mask_input[h_start:h_end, w_start:w_end]
         im_size = image.shape[:2]
         if max(im_size) > 512 and args.pre_resize == 0:
             args.pre_resize = 512
         if args.pre_resize > 0:
             resize_scale = args.pre_resize / max(im_size)
             image = cv2.resize(image, [int(dim * resize_scale) for dim in im_size[::-1]])
+            if mask_input is not None:
+                mask_input = cv2.resize(mask_input, [int(dim * resize_scale) for dim in im_size[::-1]])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         target = Image.fromarray(image)
+        if mask_input is not None:
+            mask_input = Image.fromarray(mask_input)
         if target.mode == "RGBA":
             # Create a white rgba background
             new_image = Image.new("RGBA", target.size, "WHITE")
@@ -202,6 +216,8 @@ class VideoPainter(Painter):
         
         if args.mask_object:
             target = masked_im
+        elif mask_input is not None:
+            mask = mask_input
         if args.fix_scale:
             target = utils.fix_image_scale(target)
 

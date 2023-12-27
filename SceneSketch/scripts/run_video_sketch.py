@@ -28,6 +28,7 @@ parser.add_argument("--start_frame", type=int, default=0)
 parser.add_argument("--end_frame", type=int, default=-1)
 parser.add_argument("--center_frame", type=int, default=-1)
 parser.add_argument("--center_method", type=str, default='none')
+parser.add_argument("--mask_path", type=str, default='')
 parser.add_argument("--edges_blur", type=int, default=0)
 parser.add_argument("--model_ver", type=int, default=1)
 parser.add_argument("--motion_reg_ratio", type=float, default=0.)
@@ -154,6 +155,7 @@ def run(seed, wandb_name, output_dir, losses_best_normalised, losses_eval_sum, t
                             "--end_frame", str(args.end_frame),
                             "--center_frame", str(args.center_frame),
                             "--center_method", str(args.center_method),
+                            "--mask_path", str(args.mask_path),
                             "--mmflow_config_file", str(args.mmflow_config_file),
                             "--mmflow_checkpoint", str(args.mmflow_checkpoint),
                             "--future_frames", str(args.future_frames),
