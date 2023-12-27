@@ -109,6 +109,7 @@ class VideoPainter(Painter):
             cap_mask.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
             _, mask_input = cap_mask.read()
             mask_input = cv2.cvtColor(mask_input, cv2.COLOR_BGR2GRAY)
+            mask_input = np.uint8(mask_input > 0)
         else:
             mask_input = None
         
