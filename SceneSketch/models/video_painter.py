@@ -201,8 +201,6 @@ class VideoPainter(Painter):
                 mask_input = cv2.resize(mask_input, [int(dim * resize_scale) for dim in im_size[::-1]])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         target = Image.fromarray(image)
-        if mask_input is not None:
-            mask_input = Image.fromarray(mask_input)
         if target.mode == "RGBA":
             # Create a white rgba background
             new_image = Image.new("RGBA", target.size, "WHITE")
