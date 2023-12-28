@@ -217,13 +217,13 @@ class VideoPainter(Painter):
         if is_first:
             self.dino_attn_helper(target)
         masked_im, mask = utils.get_mask_u2net(args, target)
-        print('mask', np.max(mask), np.min(mask), mask.shape)
+        print('mask', np.max(mask), np.min(mask), mask.shape, mask.dtype)
         
         if args.mask_object:
             target = masked_im
         elif mask_input is not None:
             mask = mask_input
-            print('mask_input', np.max(mask), np.min(mask), mask.shape)
+            print('mask_input', np.max(mask), np.min(mask), mask.shape, mask.dtype)
         if args.fix_scale:
             target = utils.fix_image_scale(target)
 
