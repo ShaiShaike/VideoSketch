@@ -105,7 +105,7 @@ class VideoPainter(Painter):
         success, image = cap.read()
         
         if args.mask_path:
-            cap_mask = cap = cv2.VideoCapture(args.mask_path)
+            cap_mask = cv2.VideoCapture(args.mask_path)
             cap_mask.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
             _, mask_input = cap_mask.read()
             mask_input = cv2.cvtColor(mask_input, cv2.COLOR_BGR2GRAY)
