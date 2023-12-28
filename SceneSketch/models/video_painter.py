@@ -154,9 +154,11 @@ class VideoPainter(Painter):
 
             success, image = cap.read()
             if args.mask_path:
-                _, mask_input = cap_mask.read()
+                success, mask_input = cap_mask.read()
+                print('success', success)
                 mask_input = cv2.cvtColor(mask_input, cv2.COLOR_BGR2GRAY)
-                mask_input = np.uint8(mask_input > 0)
+                mask_input = (mask_input > 0).astype(float)
+                mask_input = np.concatenate([mask_input, mask_input, mask_input], axis=2)
             self.prep_timer.toc()
     
     def calc_flow(self, frame_index, args):
