@@ -72,6 +72,7 @@ class VideoPainter(Painter):
 
         mask = torch.load(str(mask_path)).to(self.device)
         self.mask = 1- mask if self.reverse_mask else mask
+        print('self.mask', torch.max(self.mask), torch.min(self.mask))
         if self.attention_init:
             self.attention_map = np.load(str(self.workdir / f"attention_map_{self.base_frame}.npy"))
         else:
@@ -152,6 +153,10 @@ class VideoPainter(Painter):
                 self.calc_flow(frame_index, args)
 
             success, image = cap.read()
+            if args.mask_path:
+                _, mask_input = cap_mask.read()
+                mask_input = cv2.cvtColor(mask_input, cv2.COLOR_BGR2GRAY)
+                mask_input = np.uint8(mask_input > 0)
             self.prep_timer.toc()
     
     def calc_flow(self, frame_index, args):
@@ -212,11 +217,13 @@ class VideoPainter(Painter):
         if is_first:
             self.dino_attn_helper(target)
         masked_im, mask = utils.get_mask_u2net(args, target)
+        print('mask', np.max(mask), np.min(mask))
         
         if args.mask_object:
             target = masked_im
         elif mask_input is not None:
             mask = mask_input
+            print('mask_input', np.max(mask), np.min(mask))
         if args.fix_scale:
             target = utils.fix_image_scale(target)
 
