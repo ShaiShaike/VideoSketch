@@ -155,7 +155,6 @@ class VideoPainter(Painter):
             success, image = cap.read()
             if args.mask_path:
                 success, mask_input = cap_mask.read()
-                print('success', success)
                 mask_input = cv2.cvtColor(mask_input, cv2.COLOR_BGR2GRAY)
                 mask_input = np.expand_dims((mask_input > 0).astype(float), axis=2)
                 mask_input = np.concatenate([mask_input, mask_input, mask_input], axis=2)
@@ -219,13 +218,11 @@ class VideoPainter(Painter):
         if is_first:
             self.dino_attn_helper(target)
         masked_im, mask = utils.get_mask_u2net(args, target)
-        print('mask', np.max(mask), np.min(mask), mask.shape, mask.dtype)
         
         if args.mask_object:
             target = masked_im
         elif mask_input is not None:
             mask = mask_input
-            print('mask_input', np.max(mask), np.min(mask), mask.shape, mask.dtype)
         if args.fix_scale:
             target = utils.fix_image_scale(target)
 
