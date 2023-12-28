@@ -72,7 +72,6 @@ class VideoPainter(Painter):
 
         mask = torch.load(str(mask_path)).to(self.device)
         self.mask = 1- mask if self.reverse_mask else mask
-        print('self.mask', torch.max(self.mask), torch.min(self.mask))
         if self.attention_init:
             self.attention_map = np.load(str(self.workdir / f"attention_map_{self.base_frame}.npy"))
         else:
@@ -110,7 +109,8 @@ class VideoPainter(Painter):
             cap_mask.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
             _, mask_input = cap_mask.read()
             mask_input = cv2.cvtColor(mask_input, cv2.COLOR_BGR2GRAY)
-            mask_input = np.uint8(mask_input > 0)
+            mask_input = (mask_input > 0).astype(float)
+            mask_input = np.concatenate([mask_input, mask_input, mask_input], axis=2)
         else:
             mask_input = None
         
