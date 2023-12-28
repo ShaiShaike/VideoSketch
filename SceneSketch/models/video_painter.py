@@ -109,7 +109,7 @@ class VideoPainter(Painter):
             cap_mask.set(cv2.CAP_PROP_POS_FRAMES, args.start_frame)
             _, mask_input = cap_mask.read()
             mask_input = cv2.cvtColor(mask_input, cv2.COLOR_BGR2GRAY)
-            mask_input = np.expand_dims((mask_input > 0).astype(float), axis=2)
+            mask_input = np.float32(np.expand_dims((mask_input > 0), axis=2))
             mask_input = np.concatenate([mask_input, mask_input, mask_input], axis=2)
         else:
             mask_input = None
@@ -156,7 +156,7 @@ class VideoPainter(Painter):
             if args.mask_path:
                 success, mask_input = cap_mask.read()
                 mask_input = cv2.cvtColor(mask_input, cv2.COLOR_BGR2GRAY)
-                mask_input = np.expand_dims((mask_input > 0).astype(float), axis=2)
+                mask_input = np.float32(np.expand_dims((mask_input > 0), axis=2))
                 mask_input = np.concatenate([mask_input, mask_input, mask_input], axis=2)
             self.prep_timer.toc()
     
