@@ -1047,6 +1047,7 @@ class MotionMLP(nn.Module):
         if self.num_pos_encoding:
             self.encoding_freq = torch.pi / (1 + torch.randperm(100)[:self.num_pos_encoding]).to(device)
             if learnable_encoding:
+                print('learnable_encoding!!')
                 self.encoding_freq = torch.nn.Parameter(self.encoding_freq)
                 self.encoding_freq.requires_grad = True              
         
