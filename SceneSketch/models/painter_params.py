@@ -110,8 +110,10 @@ class Painter(torch.nn.Module):
         self.is_video = is_video
         if self.is_video:
             self.frame_num = 0
+            is_learnable = 'learn_encoding' in args.center_method
             self.motion_mlp = MotionMLP(num_strokes=self.num_paths, num_cp=self.control_points_per_seg,
-                                        num_pos_encoding=self.args.num_pos_encoding, device=device).to(device) if self.mlp_train else None
+                                        num_pos_encoding=self.args.num_pos_encoding, device=device, 
+                                        learnable_encoding=is_learnable).to(device) if self.mlp_train else None
         
         self.mlp_points_weights_path = args.mlp_points_weights_path
         self.mlp_points_weight_init()
@@ -1032,7 +1034,7 @@ class MLP(nn.Module):
 
 
 class MotionMLP(nn.Module):
-    def __init__(self, num_strokes, num_cp, num_pos_encoding=0, device='cpu'):
+    def __init__(self, num_strokes, num_cp, num_pos_encoding=0, device='cpu', learnable_encoding=False):
         super().__init__()
         inner_dim = 1000
         time_channels = 2 * num_pos_encoding if num_pos_encoding else 1
@@ -1044,6 +1046,9 @@ class MotionMLP(nn.Module):
         self.num_pos_encoding = num_pos_encoding
         if self.num_pos_encoding:
             self.encoding_freq = torch.pi / (1 + torch.randperm(100)[:self.num_pos_encoding]).to(device)
+            if learnable_encoding:
+                self.encoding_freq = torch.nn.Parameter(self.encoding_freq)
+                self.encoding_freq.requires_grad = True              
         
 
     def forward(self, x, get_detlas=False):
