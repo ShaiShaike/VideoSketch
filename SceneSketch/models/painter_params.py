@@ -1034,7 +1034,7 @@ class MLP(nn.Module):
 
 
 class MotionMLP(nn.Module):
-    def __init__(self, num_strokes, num_cp, num_pos_encoding=0, device='cpu', learnable_encoding=False):
+    def __init__(self, num_strokes, num_cp, num_pos_encoding=0, device='cpu', learnable_encoding=False, center_frame=1):
         super().__init__()
         inner_dim = 1000
         time_channels = 2 * num_pos_encoding if num_pos_encoding else 1
@@ -1046,9 +1046,12 @@ class MotionMLP(nn.Module):
         self.num_pos_encoding = num_pos_encoding
         if self.num_pos_encoding:
             self.encoding_freq = torch.pi / (1 + torch.randperm(100)[:self.num_pos_encoding]).to(device)
+            self.delta_t = torch.ones(num_pos_encoding) * center_frame / 100
             if learnable_encoding:
                 self.encoding_freq = torch.nn.Parameter(self.encoding_freq)
-                self.encoding_freq.requires_grad = True              
+                self.encoding_freq.requires_grad = True
+                self.delta_t = torch.nn.Parameter(self.delta_t)
+                self.delta_t.requires_grad = True
         
 
     def forward(self, x, get_detlas=False):
@@ -1058,8 +1061,8 @@ class MotionMLP(nn.Module):
         timeframe = torch.unsqueeze(x[:, -1], dim=1)
         
         if self.num_pos_encoding:
-            timeframe = torch.cat([torch.sin(torch.unsqueeze(self.encoding_freq, dim=0) * timeframe),
-                                   torch.cos(torch.unsqueeze(self.encoding_freq, dim=0) * timeframe)],
+            timeframe = torch.cat([torch.sin(torch.unsqueeze(self.encoding_freq, dim=0) * (timeframe - 100 * self.delta_t)),
+                                   torch.cos(torch.unsqueeze(self.encoding_freq, dim=0) * (timeframe - 100 * self.delta_t))],
                                   dim=1)
         x = torch.cat([coordinates, timeframe], dim=1)
         deltas = self.linear_1(x)
