@@ -537,7 +537,8 @@ def inference_video(args, eps=1e-4, is_video=0):
 
     is_learnable = 'learn_encoding' in args.center_method
     motion_mlp = MotionMLP(num_strokes=num_paths, num_cp=control_points_per_seg,
-                           num_pos_encoding=args.num_pos_encoding, device=device, learnable_encoding=is_learnable).to(device)
+                           num_pos_encoding=args.num_pos_encoding, device=device,
+                           learnable_encoding=is_learnable, center_frame=args.center_frame).to(device)
     checkpoint = torch.load(mlp_motion_weights_path)
     motion_mlp.load_state_dict(checkpoint['model_state_dict'])
 

@@ -112,8 +112,8 @@ class Painter(torch.nn.Module):
             self.frame_num = 0
             is_learnable = 'learn_encoding' in args.center_method
             self.motion_mlp = MotionMLP(num_strokes=self.num_paths, num_cp=self.control_points_per_seg,
-                                        num_pos_encoding=self.args.num_pos_encoding, device=device, 
-                                        learnable_encoding=is_learnable).to(device) if self.mlp_train else None
+                                        num_pos_encoding=self.args.num_pos_encoding, device=device, learnable_encoding=is_learnable,
+                                        center_frame=args.center_frame).to(device) if self.mlp_train else None
         
         self.mlp_points_weights_path = args.mlp_points_weights_path
         self.mlp_points_weight_init()
