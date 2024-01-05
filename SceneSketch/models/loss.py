@@ -820,7 +820,7 @@ class CLIPConvLoss(torch.nn.Module):
         for layer, w in enumerate(clip_conv_layer_weights):
             if w:
                 conv_loss_dict[f"clip_{self.loss_log_name}_l{layer}"] = conv_loss[layer]
-            if layer == 11 and self.l11_norm:
+            if self.clip_model_name.startswith("ViT") and layer == 11 and self.l11_norm:
                 conv_loss_dict[f"clip_{self.loss_log_name}_l{layer}_normalization"] = conv_loss[layer]
 
         if self.clip_fc_loss_weight:
